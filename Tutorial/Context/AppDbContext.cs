@@ -38,7 +38,9 @@ namespace Tutorial.Context
                 .HasConversion<string>();
 
             // Aktif olmayan firmaları getirmemesi için bir filtre ekliyoruz.
-            modelBuilder.Entity<Company>().HasQueryFilter(c => c.IsActive);
+            modelBuilder.Entity<Company>().HasQueryFilter(c => !c.IsDeleted);
+
+            modelBuilder.Entity<Driver>().HasQueryFilter(d => !d.IsDeleted); // !d.Company.IsDeleted koşulunu eklemedim.
         }
     }
 }

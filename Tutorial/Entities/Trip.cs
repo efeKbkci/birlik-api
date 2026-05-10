@@ -26,5 +26,7 @@ public class Trip
     public int AvailableCapacity { get; set; } 
     public TripStatus TripStatus { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool IsDeleted { get; set; } = false;
+
     public ICollection<Reservation> Reservations { get; set; }
 }

@@ -13,5 +13,6 @@ public class Vehicle
     public string PlateNumber { get; set; }
     public int Capacity { get; set; }
     public bool IsActive { get; set; }
+    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; }
 }

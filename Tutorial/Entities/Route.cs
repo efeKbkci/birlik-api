@@ -14,6 +14,7 @@ public class Route
     public int EstimatedDuration { get; set; }
     public int BasePrice { get; set; }
     public bool IsActive { get; set; }
+    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; }
     public ICollection<Stop> Stops { get; set; }
     public ICollection<Trip> Trips { get; set; }
