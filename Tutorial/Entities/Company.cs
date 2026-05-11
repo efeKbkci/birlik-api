@@ -11,5 +11,4 @@ public class Company
     public DateTime CreatedAt { get; set; }
     public ICollection<Driver> Drivers { get; set; }
     public ICollection<Vehicle> Vehicles { get; set; }
-    public ICollection<Route> Routes { get; set; }
 }

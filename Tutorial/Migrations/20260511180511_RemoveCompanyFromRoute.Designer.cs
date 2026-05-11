@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Tutorial.Context;
@@ -11,9 +12,11 @@ using Tutorial.Context;
 namespace Tutorial.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260511180511_RemoveCompanyFromRoute")]
+    partial class RemoveCompanyFromRoute
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,10 +352,6 @@ namespace Tutorial.Migrations
                     b.Property<int>("AvailableCapacity")
                         .HasColumnType("integer")
                         .HasColumnName("available_capacity");
-
-                    b.Property<int>("BasePrice")
-                        .HasColumnType("integer")
-                        .HasColumnName("base_price");
 
                     b.Property<int>("CompanyId")
                         .HasColumnType("integer")

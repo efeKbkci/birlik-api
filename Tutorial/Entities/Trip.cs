@@ -23,10 +23,10 @@ public class Trip
     public int DriverId { get; set; }
     public Driver Driver { get; set; }  
     public DateTime DepartureTime { get; set; }
-    public int AvailableCapacity { get; set; } 
+    public int AvailableCapacity { get; set; }
+    public int BasePrice { get; set; }
     public TripStatus TripStatus { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsDeleted { get; set; } = false;
-
     public ICollection<Reservation> Reservations { get; set; }
 }
