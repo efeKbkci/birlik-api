@@ -1,5 +1,7 @@
-using Tutorial.Context; // Kendi yazdýðýmýz DbContext'in yolu
+using Tutorial.Mappings;
 using Microsoft.EntityFrameworkCore; // EF Core'un komutlarý için gerekli
+using Microsoft.Extensions.DependencyInjection;
+using Tutorial.Context; // Kendi yazdýðýmýz DbContext'in yolu
 
 // ==========================================
 // BÖLÜM 1: UYGULAMA KURULUMU VE SERVÝSLER
@@ -19,6 +21,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
            .UseSnakeCaseNamingConvention()); // ÝÞTE BU SÝHÝRLÝ SATIRI EKLEDÝK
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+builder.Services.AddAutoMapper(cfg => { }, typeof(CompanyMappingProfile), typeof(DriversMappingProfile));
 
 // ==========================================
 // BÖLÜM 2: UYGULAMA ÇALIÞMA ZAMANI (PIPELINE)
