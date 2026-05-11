@@ -22,7 +22,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(CompanyMappingProfile), typeof(DriversMappingProfile));
+builder.Services.AddAutoMapper(cfg => { }, typeof(CompanyMappingProfile), typeof(DriversMappingProfile)
+                                           , typeof(CityMappingProfile));
 
 // ==========================================
 // BÖLÜM 2: UYGULAMA ÇALIÞMA ZAMANI (PIPELINE)
