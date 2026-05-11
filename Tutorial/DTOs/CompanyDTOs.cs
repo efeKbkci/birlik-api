@@ -9,11 +9,17 @@ public class CompanyReadDto
     public bool IsActive { get; set; }
 }
 
+public class CompanyDeleteIncludedDto : CompanyReadDto 
+{
+    public bool IsDeleted { get; set; }
+}
+
 public class CompanyCreateDto
 {
     public string CompanyName { get; set; }
     public string ContactPhone { get; set; }
     public string Location { get; set; }
+    public bool IsActive { get; set; }
 }
 
 public class CompanyPatchDto

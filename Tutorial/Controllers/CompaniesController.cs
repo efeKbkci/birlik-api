@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
@@ -9,9 +10,10 @@ namespace Tutorial.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class CompaniesController(AppDbContext context) : ControllerBase
+public class CompaniesController(AppDbContext context, IMapper mapper) : ControllerBase
 {
     private readonly AppDbContext _context = context;
+    private readonly IMapper _mapper = mapper;
 
     // Endpoint: GET api/companies/5
     // Buradaki "{id}" ifadesi URL'den gelecek dinamik bir sayıdır.
@@ -26,57 +28,41 @@ public class CompaniesController(AppDbContext context) : ControllerBase
             return NotFound($"Firm with ID = {id} doesn't exist in DB.");
         }
 
-        var companyDto = new CompanyReadDto
-        {
-            Id = company.Id,
-            CompanyName = company.CompanyName,
-            ContactPhone = company.ContactPhone,
-            Location = company.Location,
-            IsActive = company.IsActive
-        };
+        // _mapper.Map<HedefTip>(KaynakVeri) 
+        var companyDto = _mapper.Map<CompanyReadDto>(company);
 
         return Ok(companyDto);
     }
 
-    // Kullanım (Silinenler Dahil): GET api/companies?includeInactives=true
+    // Kullanım (Silinenler Dahil): GET api/companies?includeDeleted=true
     [HttpGet]
-    public async Task<IActionResult> GetCompanies([FromQuery] bool includeInactives = false)
+    public async Task<IActionResult> GetCompanies([FromQuery] bool includeDeleted = false)
     {
         // Sorguyu modifiye edebileceğimiz şekilde oluşturuyoruz.
         var query = _context.Companies.AsQueryable();
 
         // Eğer kullanıcı silinenleri de istiyorsa, filtreyi devre dışı bırak.
-        if (includeInactives)
+        if (includeDeleted)
         {
             query = query.IgnoreQueryFilters();
         }
 
         var companies = await query.ToListAsync();
 
-        var dtoList = companies.Select(c => new CompanyReadDto 
-            { 
-                Id = c.Id,
-                CompanyName = c.CompanyName,
-                ContactPhone = c.ContactPhone,
-                Location = c.Location,
-                IsActive = c.IsActive
-            }
-        );
+        if (includeDeleted)
+        {
+            var adminResult = _mapper.Map<List<CompanyDeleteIncludedDto>>(companies);
+            return Ok(adminResult);
+        }
 
-        return Ok(dtoList);
+        var standardResult = _mapper.Map<List<CompanyReadDto>>(companies);
+        return Ok(standardResult);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateCompany(CompanyCreateDto dto)
     {
-        var newCompany = new Company
-        {
-            CompanyName = dto.CompanyName,
-            ContactPhone = dto.ContactPhone,
-            Location = dto.Location,
-            IsActive = true, 
-            CreatedAt = DateTime.UtcNow 
-        };
+        var newCompany = _mapper.Map<Company>(dto);
 
         _context.Companies.Add(newCompany);
 
@@ -86,11 +72,6 @@ public class CompaniesController(AppDbContext context) : ControllerBase
         return CreatedAtAction(nameof(GetCompanyById), new { id = newCompany.Id }, newCompany);
     }
 
-    /* Bu metot bir şirketi pasif hale getirmek için kullanılabilir fakat
-     * Pasif bir şirketi aktif hale getirmek için kullanılamaz. 
-     * Çünkü pasif şirketler bu metot içerisinde listelenmez. 
-     * Pasif bir şirketi güncelleyebilmek için önce şirketi aktif hale getirmeliyiz.
-     */
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateCompany(int id, CompanyPatchDto dto)
     {
@@ -124,15 +105,15 @@ public class CompaniesController(AppDbContext context) : ControllerBase
             return NotFound($"Firm with ID = {id} doesn't exist in DB.");
 
         // Soft Delete işlemi ile veriyi görünmez yapıyoruz.
-        company.IsActive = false;
+        company.IsDeleted = true;
 
         await _context.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpPut("{id}/reactivate")]
-    public async Task<IActionResult> ReactivateCompany(int id)
+    [HttpPut("{id}/restore")]
+    public async Task<IActionResult> RestoreCompany(int id)
     {
         // IgnoreQueryFilters() ile OnModelCreating metodu altında eklediğimiz filtreyi deliyoruz.
         // Not: FindAsync ile IgnoreQueryFilters doğrudan yan yana kullanılamaz, 
@@ -144,13 +125,13 @@ public class CompaniesController(AppDbContext context) : ControllerBase
         if (company == null)
             return NotFound($"{id} numaralı firma veri tabanında yok.");
 
-        if (company.IsActive)
-            return BadRequest("Bu firma zaten aktif durumda.");
+        if (!company.IsDeleted)
+            return BadRequest("Bu firma zaten silinmemiş.");
 
-        company.IsActive = true;
+        company.IsDeleted = false;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Firma başarıyla tekrar aktif edildi." });
+        return Ok(new { Message = "Firma başarıyla kurtarıldı." });
     }
 }
 
