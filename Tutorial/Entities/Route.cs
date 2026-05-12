@@ -10,7 +10,6 @@ public class Route
     public int ArrivalCityId { get; set; } // FK
     public City ArrivalCity { get; set; } // Navigation Property
     public int EstimatedDuration { get; set; }
-    public bool IsActive { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; }
 }
