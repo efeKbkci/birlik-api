@@ -14,6 +14,6 @@ public class CityMappingProfile : Profile
 
         // --- YAZMA (DTO'dan Entity'ye) ---
         CreateMap<CityCreateDto, City>();
-        CreateMap<CityPatchDto, City>();
+        CreateMap<CityPatchDto, City>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
     }
 }

@@ -76,12 +76,7 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
             return NotFound($"Driver with ID = {id} doesn't exist in DB.");
         }
 
-        if (dto.CompanyId != null) driver.CompanyId = (int) dto.CompanyId;
-        if (dto.FirstName != null) driver.FirstName = dto.FirstName;
-        if (dto.LastName != null) driver.LastName = dto.LastName;
-        if (dto.PhoneNumber != null) driver.PhoneNumber = dto.PhoneNumber;
-        if (dto.PasswordHash != null) driver.PasswordHash = dto.PasswordHash;
-        if (dto.IsActive != null) driver.IsActive = dto.IsActive.Value;
+        _mapper.Map(dto, driver);
 
         await _context.SaveChangesAsync();
 

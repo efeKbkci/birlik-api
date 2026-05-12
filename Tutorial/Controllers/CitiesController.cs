@@ -53,7 +53,7 @@ namespace Tutorial.Controllers
                 return NotFound($"City with ID = {id} doesn't exist in DB.");
             }
 
-            city.Name = dto.Name;
+            _mapper.Map(dto, city);
 
             await _context.SaveChangesAsync();
 

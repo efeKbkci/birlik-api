@@ -86,10 +86,7 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
          * yalnızca o niteliğin güncel değerini gönderir. Bu durumda diğer nitelikler null olur. 
          * null olan değerler güncellenmez. 
          */
-        if (dto.CompanyName != null) company.CompanyName = dto.CompanyName;
-        if (dto.ContactPhone != null) company.ContactPhone = dto.ContactPhone;
-        if (dto.Location != null) company.Location = dto.Location;
-        if (dto.IsActive != null) company.IsActive = dto.IsActive.Value;
+        _mapper.Map(dto, company);
 
         await _context.SaveChangesAsync();
 
