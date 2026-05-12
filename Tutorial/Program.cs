@@ -48,3 +48,5 @@ app.MapControllers();
 
 // 8. Motoru çalýþtýr!
 app.Run();
+
+public partial class Program { }
