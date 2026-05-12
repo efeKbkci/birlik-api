@@ -42,7 +42,26 @@ namespace Tutorial.Context
 
             modelBuilder.Entity<Driver>().HasQueryFilter(d => !d.IsDeleted); // !d.Company.IsDeleted koşulunu eklemedim.
 
-            modelBuilder.Entity<City>().HasQueryFilter(c => !c.IsDeleted);
+            modelBuilder.Entity<Route>().HasQueryFilter(c => !c.IsDeleted);
+
+        }
+        // CreatedAt değeri satırlara otomatik olarak eklenir. 
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            // Veritabanına eklenmek üzere olan (Added) tüm nesneleri bul
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Added);
+
+            foreach (var entry in entries)
+            {
+                // Eğer bu nesnenin "CreatedAt" diye bir kolonu varsa, saatini şu anki UTC yap!
+                if (entry.Properties.Any(p => p.Metadata.Name == "CreatedAt"))
+                {
+                    entry.Property("CreatedAt").CurrentValue = DateTime.UtcNow;
+                }
+            }
+
+            return base.SaveChangesAsync(cancellationToken);
         }
     }
 }
