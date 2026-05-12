@@ -3,7 +3,6 @@
 public class DriverReadDto
 {
     public int Id { get; set; }
-    public int CompanyId { get; set; }
     public string CompanyName { get; set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
