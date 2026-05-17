@@ -43,6 +43,10 @@ namespace Tutorial.Context
             modelBuilder.Entity<Driver>().HasQueryFilter(d => !d.IsDeleted); // !d.Company.IsDeleted koşulunu eklemedim.
 
             modelBuilder.Entity<Route>().HasQueryFilter(c => !c.IsDeleted);
+            
+            modelBuilder.Entity<City>().HasQueryFilter(c => !c.IsDeleted);
+
+            modelBuilder.Entity<Vehicle>().HasQueryFilter(v => !v.IsDeleted);
 
         }
         // CreatedAt değeri satırlara otomatik olarak eklenir. 
