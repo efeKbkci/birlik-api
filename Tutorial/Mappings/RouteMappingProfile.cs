@@ -9,7 +9,9 @@ namespace Tutorial.Mappings
         public RouteMappingProfile() 
         {
             // --- OKUMA (Entity'den DTO'ya) ---
-            CreateMap<Route, RouteReadDto>();
+            CreateMap<Route, RouteReadDto>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => $"{src.DepartureCity.Name} - {src.ArrivalCity.Name}"));
+            
             CreateMap<Route, RouteDeleteIncludedDto>();
 
             // --- YAZMA (DTO'dan Entity'ye) ---
