@@ -97,4 +97,21 @@ public static class TestDataFactory
 
         return createDto;
     }
+
+    public static StopCreateDto CreateNewStopObject(int companyId, int routeId)
+    {
+        var faker = new Bogus.Faker("tr");
+        
+        var createDto = new StopCreateDto
+        {
+            CompanyId = companyId,
+            RouteId = routeId,
+            StopName = faker.Address.StreetName(),
+            StopOrder = faker.Random.Number(1, 10),
+            TimeOffsetMins = faker.Random.Number(15, 60),
+            IsActive = true
+        };
+
+        return createDto;
+    }
 }

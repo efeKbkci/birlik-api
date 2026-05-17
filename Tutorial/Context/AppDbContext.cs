@@ -47,6 +47,7 @@ namespace Tutorial.Context
             modelBuilder.Entity<City>().HasQueryFilter(c => !c.IsDeleted);
 
             modelBuilder.Entity<Vehicle>().HasQueryFilter(v => !v.IsDeleted);
+            modelBuilder.Entity<Stop>().HasQueryFilter(s => !s.IsDeleted);
 
         }
         // CreatedAt değeri satırlara otomatik olarak eklenir. 
