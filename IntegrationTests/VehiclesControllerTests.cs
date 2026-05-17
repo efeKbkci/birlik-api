@@ -1,57 +1,36 @@
+using IntegrationTests.Helpers;
+using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Tutorial.DTOs;
 using Xunit;
 
 namespace IntegrationTests;
 
-public class VehiclesControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public VehiclesControllerTests(WebApplicationFactory<Program> factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task VehicleFullLifecycle_ShouldWorkCorrectly()
     {
         // --- 0. BAĞIMLILIK HAZIRLIĞI (Test İzolasyonu) ---
         // Araç oluşturabilmek için önce bir Şirket ve bir Sürücü oluşturuyoruz.
-        var companyDto = new CompanyCreateDto { CompanyName = "VehicleTestCorp", ContactPhone = "321", Location = "İzmir", IsActive = true };
+        var companyDto = TestDataFactory.CreateNewCompanyObject();
         var companyResponse = await _client.PostAsJsonAsync("/api/companies", companyDto);
         var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
         var companyId = createdCompany!.Id;
 
-        var driverCreate = new DriverCreateDto
-        {
-            CompanyId = companyId,
-            FirstName = "VehDrv_" + Guid.NewGuid().ToString()[..5],
-            LastName = "Test",
-            PhoneNumber = "555-000-1111",
-            PasswordHash = "Hash",
-            IsActive = true
-        };
-
+        var driverCreate = TestDataFactory.CreateNewDriverObject(companyId);
         var driverResponse = await _client.PostAsJsonAsync("/api/drivers", driverCreate);
         var createdDriver = await driverResponse.Content.ReadFromJsonAsync<DriverReadDto>();
         var driverId = createdDriver!.Id;
 
         // --- 1. ARRANGE: Araç Hazırlığı ---
-        var plate = "TR-" + Guid.NewGuid().ToString()[..6];
-        var createDto = new VehicleCreateDto
-        {
-            CompanyId = companyId,
-            DefaultDriverId = driverId,
-            PlateNumber = plate,
-            Capacity = 20,
-            IsActive = true
-        };
+        var vehicleDto = TestDataFactory.CreateNewVehicleObject(companyId, driverId);
 
         // --- 2. CREATE (POST) ---
-        var postResponse = await _client.PostAsJsonAsync("/api/vehicles", createDto);
+        var postResponse = await _client.PostAsJsonAsync("/api/vehicles", vehicleDto);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
         var createdVehicle = await postResponse.Content.ReadFromJsonAsync<VehicleReadDto>();
@@ -62,8 +41,8 @@ public class VehiclesControllerTests : IClassFixture<WebApplicationFactory<Progr
         var getResponse = await _client.GetAsync($"/api/vehicles/{vehicleId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
         var fetchedVehicle = await getResponse.Content.ReadFromJsonAsync<VehicleReadDto>();
-        Assert.Equal(plate, fetchedVehicle?.PlateNumber);
-        Assert.Equal(20, fetchedVehicle?.Capacity);
+        Assert.Equal(vehicleDto.PlateNumber, fetchedVehicle?.PlateNumber);
+        Assert.Equal(vehicleDto.Capacity, fetchedVehicle?.Capacity);
 
         // --- 4. UPDATE (PATCH) ---
         var newPlate = "TR-NEW-" + Guid.NewGuid().ToString()[..4];

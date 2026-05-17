@@ -1,44 +1,31 @@
-﻿using System.Net;
-using System.Net.Http.Json;
+﻿using IntegrationTests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net;
+using System.Net.Http.Json;
 using Tutorial.DTOs;
 using Xunit;
 
 namespace IntegrationTests;
 
-public class DriversControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class DriversControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public DriversControllerTests(WebApplicationFactory<Program> factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task DriverFullLifecycle_ShouldWorkCorrectly()
     {
         // --- 0. BAĞIMLILIK HAZIRLIĞI (Test İzolasyonu) ---
         // Sürücüyü ekleyebilmek için önce ona bir Şirket oluşturuyoruz.
-        var companyDto = new CompanyCreateDto { CompanyName = "DriverTestCorp", ContactPhone = "123", Location = "Bursa", IsActive = true };
+        var companyDto = TestDataFactory.CreateNewCompanyObject();
         var companyResponse = await _client.PostAsJsonAsync("/api/companies", companyDto);
         var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
         var companyId = createdCompany!.Id;
 
         // --- 1. ARRANGE: Sürücü Hazırlığı ---
-        var randomFirstName = "Driver_" + Guid.NewGuid().ToString()[..5];
-        var createDto = new DriverCreateDto
-        {
-            CompanyId = companyId,
-            FirstName = randomFirstName,
-            LastName = "Yılmaz",
-            PhoneNumber = "555-123-4567",
-            PasswordHash = "TestHash123",
-            IsActive = true
-        };
+        var driverDto = TestDataFactory.CreateNewDriverObject(companyId);
 
         // --- 2. CREATE (POST) ---
-        var postResponse = await _client.PostAsJsonAsync("/api/drivers", createDto);
+        var postResponse = await _client.PostAsJsonAsync("/api/drivers", driverDto);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
         var createdDriver = await postResponse.Content.ReadFromJsonAsync<DriverReadDto>();
@@ -49,7 +36,7 @@ public class DriversControllerTests : IClassFixture<WebApplicationFactory<Progra
         var getResponse = await _client.GetAsync($"/api/drivers/{driverId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
         var fetchedDriver = await getResponse.Content.ReadFromJsonAsync<DriverReadDto>();
-        Assert.Equal(randomFirstName, fetchedDriver?.FirstName);
+        Assert.Equal(driverDto.FirstName, fetchedDriver?.FirstName);
 
         // --- 4. UPDATE (PATCH) ---
         var newPhone = "555-999-8877";

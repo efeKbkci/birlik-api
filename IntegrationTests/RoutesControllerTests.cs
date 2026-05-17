@@ -1,42 +1,34 @@
-﻿using System.Net;
-using System.Net.Http.Json;
+﻿using IntegrationTests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net;
+using System.Net.Http.Json;
 using Tutorial.DTOs;
 using Xunit;
 
 namespace IntegrationTests;
 
-public class RoutesControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class RoutesControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
 {
-    private readonly HttpClient _client;
-
-    public RoutesControllerTests(WebApplicationFactory<Program> factory)
-    {
-        _client = factory.CreateClient();
-    }
+    private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task RouteFullLifecycle_ShouldWorkCorrectly()
     {
         // --- 0. BAĞIMLILIK HAZIRLIĞI (Test İzolasyonu) ---
         // Güzergah için iki tane bağımsız şehir oluşturuyoruz.
-        var city1Response = await _client.PostAsJsonAsync("/api/cities", new CityCreateDto { Name = "Kalkış_" + Guid.NewGuid().ToString()[..5] });
+        var city1Response = await _client.PostAsJsonAsync("/api/cities", TestDataFactory.CreateNewCityObject());
         var city1 = await city1Response.Content.ReadFromJsonAsync<CityReadDto>();
+        var departureId = city1!.Id;
 
-        var city2Response = await _client.PostAsJsonAsync("/api/cities", new CityCreateDto { Name = "Varış_" + Guid.NewGuid().ToString()[..5] });
+        var city2Response = await _client.PostAsJsonAsync("/api/cities", TestDataFactory.CreateNewCityObject());
         var city2 = await city2Response.Content.ReadFromJsonAsync<CityReadDto>();
+        var arrivalId = city2!.Id;
 
         // --- 1. ARRANGE: Güzergah Hazırlığı ---
-        var randomDuration = new Random().Next(60, 600);
-        var createDto = new RouteCreateDto
-        {
-            DepartureCityId = city1!.Id,
-            ArrivalCityId = city2!.Id,
-            EstimatedDuration = randomDuration
-        };
+        var routeDto = TestDataFactory.CreateNewRouteObject(departureId, arrivalId);
 
         // --- 2. CREATE (POST) ---
-        var postResponse = await _client.PostAsJsonAsync("/api/routes", createDto);
+        var postResponse = await _client.PostAsJsonAsync("/api/routes", routeDto);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
         var createdRoute = await postResponse.Content.ReadFromJsonAsync<RouteReadDto>();
@@ -47,14 +39,14 @@ public class RoutesControllerTests : IClassFixture<WebApplicationFactory<Program
         var getResponse = await _client.GetAsync($"/api/routes/{routeId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
         var fetchedRoute = await getResponse.Content.ReadFromJsonAsync<RouteReadDto>();
-        Assert.Equal(randomDuration, fetchedRoute?.EstimatedDuration);
+        Assert.Equal(routeDto.EstimatedDuration, fetchedRoute?.EstimatedDuration);
 
         // AutoMapper Şehir isimlerini de getirmiş mi?
         Assert.NotNull(fetchedRoute?.DepartureCityName);
         Assert.NotNull(fetchedRoute?.ArrivalCityName);
 
         // --- 4. UPDATE (PATCH) ---
-        var newDuration = randomDuration + 30;
+        var newDuration = routeDto.EstimatedDuration + 30;
         var patchDto = new RoutePatchDto { EstimatedDuration = newDuration };
         var patchResponse = await _client.PatchAsJsonAsync($"/api/routes/{routeId}", patchDto);
         Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);

@@ -1,31 +1,31 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using IntegrationTests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Tutorial.DTOs;
 using Xunit;
 
 namespace IntegrationTests;
 
-public class CompaniesControllerTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class CompaniesControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
     public async Task CompanyFullLifecycle_ShouldWorkCorrectly()
     {
-        // --- 1. ARRANGE: Rastgele Veri Hazırlığı ---
-        var randomName = "Tech_" + Guid.NewGuid().ToString()[..5];
-        var createDto = new CompanyCreateDto
-        {
-            CompanyName = randomName,
-            ContactPhone = "555-000-1122",
-            Location = "Istanbul",
-            IsActive = true
-        };
+        // --- 1. ARRANGE: Veri Hazırlığı ---
+        var properRequest = TestDataFactory.CreateNewCompanyObject();
+        var conflictedRequest = TestDataFactory.CreateNewCompanyObject();
+
+        conflictedRequest.ContactPhone = properRequest.ContactPhone;
 
         // --- 2. CREATE: Şirket Oluşturma (POST) ---
-        var postResponse = await _client.PostAsJsonAsync("/api/companies", createDto);
+        var postResponse = await _client.PostAsJsonAsync("/api/companies", properRequest);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
+
+        var conflictedResponse = await _client.PostAsJsonAsync("/api/companies", conflictedRequest);
+        Assert.Equal(HttpStatusCode.Conflict, conflictedResponse.StatusCode);
 
         var createdCompany = await postResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
         Assert.NotNull(createdCompany);
@@ -35,7 +35,7 @@ public class CompaniesControllerTests(WebApplicationFactory<Program> factory) : 
         var getResponse = await _client.GetAsync($"/api/companies/{companyId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
         var fetchedCompany = await getResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
-        Assert.Equal(randomName, fetchedCompany?.CompanyName);
+        Assert.Equal(properRequest.CompanyName, fetchedCompany?.CompanyName);
 
         // --- 4. UPDATE: Bilgileri Güncelleme (PATCH) ---
         var newLocation = "Ankara";

@@ -3,11 +3,12 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Tutorial.DTOs;
 using Xunit;
+using IntegrationTests.Helpers;
 
 namespace IntegrationTests;
 
 // IClassFixture, API'ımızı sanal olarak ayağa kaldıran altyapıyı sağlar
-public class CitiesControllerTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class CitiesControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -15,11 +16,10 @@ public class CitiesControllerTests(WebApplicationFactory<Program> factory) : ICl
     public async Task CityLifecycle_Create_Read_Delete_ShouldExecuteSuccessfully()
     {
         // --- 1. ARRANGE (Hazırlık) ---
-        var randomCityName = "Test_City_" + Guid.NewGuid().ToString()[..5];
-        var createDto = new CityCreateDto { Name = randomCityName };
+        var cityDto = TestDataFactory.CreateNewCityObject();
 
         // --- 2. ACT & ASSERT (Oluşturma İşlemi) ---
-        var postResponse = await _client.PostAsJsonAsync("/api/cities", createDto);
+        var postResponse = await _client.PostAsJsonAsync("/api/cities", cityDto);
 
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode); // 201 döndü mü?
 
@@ -35,7 +35,7 @@ public class CitiesControllerTests(WebApplicationFactory<Program> factory) : ICl
 
         var fetchedCity = await getResponse.Content.ReadFromJsonAsync<CityReadDto>();
         Assert.NotNull(fetchedCity);
-        Assert.Equal(randomCityName, fetchedCity.Name); // İsimler eşleşiyor mu?
+        Assert.Equal(cityDto.Name, fetchedCity.Name); // İsimler eşleşiyor mu?
 
         // --- 4. ACT & ASSERT (Silme İşlemi) ---
         var deleteResponse = await _client.DeleteAsync($"/api/cities/{cityId}");
