@@ -62,6 +62,15 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
     [HttpPost]
     public async Task<IActionResult> CreateCompany(CompanyCreateDto dto)
     {
+        // Business Logic: Veri tabanına aynı iletişim numarasına sahip 2 firma ekleme.
+        bool isPhoneExist = await _context.Companies.AnyAsync(c => c.ContactPhone == dto.ContactPhone);
+
+        if (isPhoneExist)
+        {
+            // 409 Conflict durumu, "Bu veri zaten var ve çakışıyor" demektir.        
+            return Conflict($"'{dto.ContactPhone}' telefon numarasına sahip aktif bir firma zaten sistemde kayıtlı.");
+        }
+
         var newCompany = _mapper.Map<Company>(dto);
 
         _context.Companies.Add(newCompany);
