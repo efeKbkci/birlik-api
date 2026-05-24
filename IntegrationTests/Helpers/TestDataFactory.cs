@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Tutorial.DTOs;
 using Tutorial.Entities;
+using Tutorial.Enums;
 
 namespace IntegrationTests.Helpers;
 
@@ -114,4 +115,25 @@ public static class TestDataFactory
 
         return createDto;
     }
+
+    public static TripCreateDto CreateNewTripObject(int companyId, int routeId, int vehicleId, int driverId, DateTime departureTime, TripStatus tripStatus)
+    {
+        var faker = new Bogus.Faker("tr");
+        var randomCapacity = faker.Random.Number(15, 55);
+        var randomBasePrice = faker.Random.Number(50, 500);
+
+        var createDto = new TripCreateDto
+        {
+            CompanyId = companyId,
+            RouteId = routeId,
+            VehicleId = vehicleId,
+            DriverId = driverId,
+            DepartureTime = departureTime,
+            Capacity = randomCapacity,
+            BasePrice = randomBasePrice,
+            TripStatus = tripStatus
+        };
+
+        return createDto;
+    } 
 }

@@ -1,7 +1,8 @@
-using Tutorial.Mappings;
 using Microsoft.EntityFrameworkCore; // EF Core'un komutlarý için gerekli
 using Microsoft.Extensions.DependencyInjection;
 using Tutorial.Context; // Kendi yazdýðýmýz DbContext'in yolu
+using Tutorial.Mappings;
+using System.Text.Json.Serialization; 
 
 // ==========================================
 // BÖLÜM 1: UYGULAMA KURULUMU VE SERVÝSLER
@@ -9,7 +10,12 @@ using Tutorial.Context; // Kendi yazdýðýmýz DbContext'in yolu
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Controller'larý sisteme tanýtýyoruz (API uç noktalarýmýz için þart)
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // JSON'daki Enum'larý sayýlar yerine String (Metin) olarak oku ve yaz.
+    // JSON verimiz {"tripStatus": 1} yerine {"tripStatus": "Scheduled"} þeklinde olacak.
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});    
 
 // 2. Swagger'ý (API dökümantasyon/test aracý) sisteme tanýtýyoruz
 builder.Services.AddEndpointsApiExplorer();

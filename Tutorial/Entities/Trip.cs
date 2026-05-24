@@ -2,15 +2,6 @@
 
 namespace Tutorial.Entities;
 
-/*
- One to Many ilişkisine göre oluşturdum;   
-    Route -> ICollection<Trip>
-
- Oluşturmadım:
-    Company -> ICollection<Trip>
-    Vehicle -> ICollection<Trip>
-    Driver  -> ICollection<Trip>
-*/
 public class Trip
 {
     public int Id { get; set; }
@@ -23,10 +14,12 @@ public class Trip
     public int DriverId { get; set; }
     public Driver Driver { get; set; }  
     public DateTime DepartureTime { get; set; }
-    public int AvailableCapacity { get; set; }
+    public int Capacity { get; set; }
+    public int PassengerNumbers { get; set; }
     public int BasePrice { get; set; }
     public TripStatus TripStatus { get; set; }
     public DateTime CreatedAt { get; set; }
-    public bool IsDeleted { get; set; } = false;
+
+    // IsDeleted sütunu kaldırıldı. Sefer silinemez, iptal edilebilir. 
     public ICollection<Reservation> Reservations { get; set; }
 }
