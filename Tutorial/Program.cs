@@ -12,9 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Controller'larý sisteme tanýtýyoruz (API uç noktalarýmýz için þart)
 
 /* Çift yönlü Enum <-> String dönüþümü için JsonStringEnumConverter kullanýyoruz. 
- * Veri gönderirken JSON içerisindeki Dto içerisindeki TripStatus = TripStatus.OnSale veri tabanýna "OnSale" olarak gönderilir, 2 olarak deðil.
- * URL içerisinde deðer string ve sayý olarak taþýnabilir. daySelection=Tomorrow veya 2 -> DaySelection.Tomorrow olarak alýnýr. 
- * Veri okurken de veri tabanýndan "OnSale" olarak gelen veri TripStatus.OnSale olarak dto içerisine kaydedilir. */
+   Dýþarýdan gelen "OnSale" string'ini Deserileþtirme iþlemi yaparken TripStatus.OnSale olarak dönüþtürür. 
+   Dýþarýya çýkacak olan TripStatus.OnSale serileþtirilirken JSON içerisine "OnSale" stringi olarak yazýlýr. 
+ */
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
