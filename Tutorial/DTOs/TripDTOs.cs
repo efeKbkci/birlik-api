@@ -38,6 +38,7 @@ public class TripCreateDto
     public int DriverId { get; set; }
     public DateTime DepartureTime { get; set; }
     public int Capacity { get; set; }
+    public int PassengerNumbers { get; set; } = 0;
     public int BasePrice { get; set; }
     public TripStatus TripStatus { get; set; }
 }

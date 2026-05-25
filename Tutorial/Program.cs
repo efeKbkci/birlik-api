@@ -10,10 +10,13 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Controller'larý sisteme tanýtýyoruz (API uç noktalarýmýz için þart)
+
+/* Çift yönlü Enum <-> String dönüþümü için JsonStringEnumConverter kullanýyoruz. 
+ * Veri gönderirken JSON içerisindeki Dto içerisindeki TripStatus = TripStatus.OnSale veri tabanýna "OnSale" olarak gönderilir, 2 olarak deðil.
+ * URL içerisinde deðer string ve sayý olarak taþýnabilir. daySelection=Tomorrow veya 2 -> DaySelection.Tomorrow olarak alýnýr. 
+ * Veri okurken de veri tabanýndan "OnSale" olarak gelen veri TripStatus.OnSale olarak dto içerisine kaydedilir. */
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    // JSON'daki Enum'larý sayýlar yerine String (Metin) olarak oku ve yaz.
-    // JSON verimiz {"tripStatus": 1} yerine {"tripStatus": "Scheduled"} þeklinde olacak.
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });    
 
@@ -24,12 +27,15 @@ builder.Services.AddSwaggerGen();
 // 3. Veritabaný baðlantýmýzý (DbContext) sisteme dahil ediyoruz (Dependency Injection)
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .UseSnakeCaseNamingConvention()); // ÝÞTE BU SÝHÝRLÝ SATIRI EKLEDÝK
+           .UseSnakeCaseNamingConvention()); // Companies yerine companies, TripStatus yerine trip_status
 
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
+// 4. /api/Trips/Dashboard -> /api/trips/dashboard
+builder.Services.AddRouting(options => options.LowercaseUrls = true); 
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(CompanyMappingProfile), typeof(DriversMappingProfile)
-                                           , typeof(CityMappingProfile));
+builder.Services.AddAutoMapper(cfg => { }, typeof(CompanyMappingProfile), typeof(DriversMappingProfile),
+                                           typeof(CityMappingProfile), typeof(RouteMappingProfile), 
+                                           typeof(StopMappingProfile), typeof(TripMappingProfile),
+                                           typeof(VehicleMappingProfile));
 
 // ==========================================
 // BÖLÜM 2: UYGULAMA ÇALIÞMA ZAMANI (PIPELINE)

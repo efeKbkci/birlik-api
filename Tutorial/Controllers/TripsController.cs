@@ -111,6 +111,8 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
     [HttpPost]
     public async Task<IActionResult> CreateTrip(TripCreateDto dto)
     {
+        // 3 gün sonraki bir sefer aktif olabilir fakat satýþta olmamasý lazým. Business logic olarak ekleyebiliriz. 
+
         var entity = _mapper.Map<Trip>(dto);
 
         _context.Trips.Add(entity);
