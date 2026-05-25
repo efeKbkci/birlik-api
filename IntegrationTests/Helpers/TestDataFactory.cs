@@ -30,6 +30,24 @@ public static class TestDataFactory
         return createDto;
     }
 
+    public static PassengerCreateDto CreateNewPassengerObject()
+    {
+        var faker = new Bogus.Faker("tr");
+
+        var phone = faker.Phone.PhoneNumber("05#########");
+        var firstName = faker.Name.FirstName();
+        var lastName = faker.Name.LastName();
+
+        var createDto = new PassengerCreateDto
+        {
+            PhoneNumber = phone,
+            FirstName = firstName,
+            LastName = lastName
+        };
+
+        return createDto;
+    }
+
     public static DriverCreateDto CreateNewDriverObject(int companyId)
     {
         var faker = new Bogus.Faker("tr"); 
@@ -136,4 +154,18 @@ public static class TestDataFactory
 
         return createDto;
     } 
+
+    public static ReservationCreateDto CreateNewReservationObject(int tripId, int passengerId, int pickupStopId, ReservationStatus reservationStatus = ReservationStatus.Pending, PassengerStatus passengerStatus = PassengerStatus.Reserved)
+    {
+        var createDto = new ReservationCreateDto
+        {
+            TripId = tripId,
+            PassengerId = passengerId,
+            PickupStopId = pickupStopId,
+            ReservationStatus = reservationStatus,
+            PassengerStatus = passengerStatus
+        };
+
+        return createDto;
+    }
 }

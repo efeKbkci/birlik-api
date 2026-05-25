@@ -24,8 +24,6 @@ public class Reservation
     public int PickupStopId { get; set; }
     public Stop PickupStop { get; set; }
     public ReservationStatus ReservationStatus { get; set; }
-    public PassengerStatus PassengerStatus { get; set; }
-    public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

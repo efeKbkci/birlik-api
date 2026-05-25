@@ -22,6 +22,11 @@ namespace Tutorial.Context
             // EF Core'un standart işlemlerini yapması için base metod çağrılır
             base.OnModelCreating(modelBuilder);
 
+            /* Bir enum class veritabanına yazılırken int olarak yazılır. Örneğin TripStatus.OnSale, 2 olarak veri tabanına yazılır. 
+               Bu işlem okunabilirliği azaltır. Bu nedenle biz int olarak değil, string olarak yazmak istiyoruz. 
+               Artık TripStatus.OnSale veri tabanına "OnSale" olarak yazılıyor. 
+             */
+
             // TripStatus için string dönüşümü
             modelBuilder.Entity<Trip>()
                 .Property(t => t.TripStatus)
@@ -31,11 +36,14 @@ namespace Tutorial.Context
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.ReservationStatus)
                 .HasConversion<string>();
-
+            
+            /*
             // PassengerStatus için string dönüşümü
             modelBuilder.Entity<Reservation>()
                 .Property(p => p.PassengerStatus)
                 .HasConversion<string>();
+
+            */
 
             // Aktif olmayan firmaları getirmemesi için bir filtre ekliyoruz.
             modelBuilder.Entity<Company>().HasQueryFilter(c => !c.IsDeleted);
@@ -50,6 +58,7 @@ namespace Tutorial.Context
             
             modelBuilder.Entity<Stop>().HasQueryFilter(s => !s.IsDeleted);
 
+            modelBuilder.Entity<Passenger>().HasQueryFilter(p => !p.IsDeleted);
         }
         // CreatedAt değeri satırlara otomatik olarak eklenir. 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
