@@ -8,12 +8,8 @@ using Xunit;
 
 namespace IntegrationTests;
 
-public class TripsControllerTests : IntegrationTestBase
+public class TripsControllerTests(InMemoryWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
-    public TripsControllerTests(InMemoryWebApplicationFactory factory) : base(factory)
-    {
-    }
-
     private async Task<(int companyId, int routeId, int vehicleId, int driverId)> SetupTripDependencies()
     {
         var cRes = await _client.PostAsJsonAsync("/api/companies", TestDataFactory.CreateNewCompanyObject());
@@ -123,11 +119,7 @@ public class TripsControllerTests : IntegrationTestBase
         }
 
         // 2. ACT - Yolcu "Bugün" (TripDaySelection.Today = 1) için arama yapıyor
-        var todayResponse = await _client.GetAsync($"/api/trips/passengerView?CompanyId={companyId}&RouteId={routeId}&DaySelection=1");
-
-        // Hata
-        var errorMessage = await todayResponse.Content.ReadAsStringAsync();
-        Console.WriteLine("API'NİN 400 HATA MESAJI: " + errorMessage);
+        var todayResponse = await _client.GetAsync($"/api/trips/passengerView?CompanyId={companyId}&RouteId={routeId}&DaySelection=Today");
 
         // 3. ASSERT - Bugün
         Assert.Equal(HttpStatusCode.OK, todayResponse.StatusCode);
