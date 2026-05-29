@@ -1,6 +1,6 @@
 ﻿namespace Tutorial.DTOs;
 
-public class DriverReadDto
+public class DetailedDriverReadDto
 {
     public int Id { get; set; }
     public string CompanyName { get; set; }
@@ -10,7 +10,15 @@ public class DriverReadDto
     public bool IsActive { get; set; }
 }
 
-public class DriverDeleteIncludedDto : DriverReadDto {
+public class BasicDriverReadDto
+{
+    public int Id { get; set; }
+    public string CompanyName { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+
+public class DriverDeleteIncludedDto : BasicDriverReadDto {
     public bool IsDeleted { get; set; }
 }
 

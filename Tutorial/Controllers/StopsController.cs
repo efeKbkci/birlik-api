@@ -20,7 +20,7 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
     {
         var dto = await _context.Stops
             .Where(s => s.Id == id)
-            .ProjectTo<StopReadDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<DetailedStopReadDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync();
 
         if (dto == null)
@@ -35,7 +35,7 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         var list = await _context.Stops
             .Where(s => s.CompanyId == companyId && s.RouteId == routeId)
             .OrderBy(s => s.StopOrder)
-            .ProjectTo<StopReadDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<BasicStopReadDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
         return Ok(list);

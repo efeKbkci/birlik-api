@@ -17,7 +17,7 @@ public class StopsControllerTests(InMemoryWebApplicationFactory factory) : IClas
         // --- 0. BAÐIMLILIK HAZIRLIÐI (Test Ýzolasyonu) ---
         // Önce bir þirket ve iki þehir oluþturuyoruz, sonra bir rota oluþturacaðýz.
         var companyResponse = await _client.PostAsJsonAsync("/api/companies", TestDataFactory.CreateNewCompanyObject());
-        var company = await companyResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
+        var company = await companyResponse.Content.ReadFromJsonAsync<DetailedCompanyReadDto>();
         var companyId = company!.Id;
 
         var city1Response = await _client.PostAsJsonAsync("/api/cities", TestDataFactory.CreateNewCityObject());
@@ -41,21 +41,21 @@ public class StopsControllerTests(InMemoryWebApplicationFactory factory) : IClas
         var postResponse = await _client.PostAsJsonAsync("/api/stops", stopCreate);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
-        var createdStop = await postResponse.Content.ReadFromJsonAsync<StopReadDto>();
+        var createdStop = await postResponse.Content.ReadFromJsonAsync<DetailedStopReadDto>();
         Assert.NotNull(createdStop);
         var stopId = createdStop.Id;
 
         // --- 3. READ (GET) ---
         var getResponse = await _client.GetAsync($"/api/stops/{stopId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
-        var fetched = await getResponse.Content.ReadFromJsonAsync<StopReadDto>();
+        var fetched = await getResponse.Content.ReadFromJsonAsync<DetailedStopReadDto>();
         Assert.Equal(stopCreate.StopName, fetched?.StopName);
         Assert.Equal(stopCreate.StopOrder, fetched?.StopOrder);
 
         // Query ile listeleme
         var listResponse = await _client.GetAsync($"/api/stops?companyId={companyId}&routeId={routeId}");
         Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
-        var list = await listResponse.Content.ReadFromJsonAsync<List<StopReadDto>>();
+        var list = await listResponse.Content.ReadFromJsonAsync<List<DetailedStopReadDto>>();
         Assert.Contains(list!, s => s.Id == stopId);
 
         // --- 4. UPDATE (PATCH) ---
@@ -64,7 +64,7 @@ public class StopsControllerTests(InMemoryWebApplicationFactory factory) : IClas
         Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
 
         var getAfterPatch = await _client.GetAsync($"/api/stops/{stopId}");
-        var patched = await getAfterPatch.Content.ReadFromJsonAsync<StopReadDto>();
+        var patched = await getAfterPatch.Content.ReadFromJsonAsync<DetailedStopReadDto>();
         Assert.Equal("Renamed Stop", patched?.StopName);
         Assert.Equal(2, patched?.StopOrder);
 

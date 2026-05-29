@@ -3,7 +3,7 @@ using Tutorial.Enums;
 
 namespace Tutorial.DTOs;
 
-public class TripReadDashboardDto // Yazýhanenin göreceði bilgiler
+public class DetailedTripReadDashboardDto // Yazýhanenin göreceði bilgiler
 {
     // CompanyName niteliði kaldýrýldý. Firma zaten sadece kendi seferlerini görebilir. Yolcu da sadece konuþtuðu firmanýn seferlerini görebilir.
     public int Id { get; set; }
@@ -17,6 +17,14 @@ public class TripReadDashboardDto // Yazýhanenin göreceði bilgiler
     public TripStatus TripStatus { get; set; }
 }
 
+public class BasicTripReadDashboardDto // Yazýhanenin liste görüntüsünde daha az alan göster
+{
+    public int Id { get; set; }
+    public string RouteName { get; set; }
+    public DateTime DepartureTime { get; set; }
+    public TripStatus TripStatus { get; set; }
+}
+
 public class TripReadPassengerDto // Yolcunun seferleri sorgularken göreceði bilgiler
 {
     public int Id { get; set; }
@@ -25,7 +33,7 @@ public class TripReadPassengerDto // Yolcunun seferleri sorgularken göreceði bil
     public int BasePrice { get; set; }
 }
 
-public class TripDeleteIncludedDto : TripReadDashboardDto
+public class TripDeleteIncludedDto : BasicTripReadDashboardDto
 {
     public bool IsDeleted { get; set; }
 }

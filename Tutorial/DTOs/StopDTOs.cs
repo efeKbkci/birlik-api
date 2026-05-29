@@ -1,6 +1,7 @@
 namespace Tutorial.DTOs;
 
-public class StopReadDto
+
+public class DetailedStopReadDto
 {
     public int Id { get; set; }
     public string CompanyName { get; set; }
@@ -11,7 +12,15 @@ public class StopReadDto
     public bool IsActive { get; set; }
 }
 
-public class StopDeleteIncludedDto : StopReadDto
+public class BasicStopReadDto
+{
+    public int Id { get; set; }
+    public string CompanyName { get; set; }
+    public string StopName { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class StopDeleteIncludedDto : BasicStopReadDto
 {
     public bool IsDeleted { get; set; }
 }

@@ -9,7 +9,8 @@ namespace Tutorial.Mappings
         public DriversMappingProfile() 
         {
             // --- OKUMA (Entity'den DTO'ya) ---
-            CreateMap<Driver, DriverReadDto>();
+            CreateMap<Driver, DetailedDriverReadDto>();
+            CreateMap<Driver, BasicDriverReadDto>();
             CreateMap<Driver, DriverDeleteIncludedDto>();
 
             // --- YAZMA (DTO'dan Entity'ye) ---

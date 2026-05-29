@@ -29,7 +29,7 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
         }
 
         // _mapper.Map<HedefTip>(KaynakVeri) 
-        var companyDto = _mapper.Map<CompanyReadDto>(company);
+        var companyDto = _mapper.Map<DetailedCompanyReadDto>(company);
 
         return Ok(companyDto);
     }
@@ -55,7 +55,7 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
             return Ok(adminResult);
         }
 
-        var standardResult = _mapper.Map<List<CompanyReadDto>>(companies);
+        var standardResult = _mapper.Map<List<BasicCompanyReadDto>>(companies);
         return Ok(standardResult);
     }
 

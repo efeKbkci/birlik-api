@@ -8,7 +8,8 @@ public class TripMappingProfile : Profile
 {
     public TripMappingProfile()
     {
-        CreateMap<Trip, TripReadDashboardDto>();
+        CreateMap<Trip, DetailedTripReadDashboardDto>();
+        CreateMap<Trip, BasicTripReadDashboardDto>();
         CreateMap<Trip, TripReadPassengerDto>();
         CreateMap<Trip, TripDeleteIncludedDto>();
 

@@ -1,6 +1,6 @@
 namespace Tutorial.DTOs;
 
-public class VehicleReadDto {
+public class DetailedVehicleReadDto {
     public int Id { get; set; }
     public string CompanyName { get; set; } 
     public string DefaultDriverName { get; set; }
@@ -9,7 +9,14 @@ public class VehicleReadDto {
     public bool IsActive { get; set; }
 }
 
-public class VehicleDeleteIncludedDto : VehicleReadDto {
+public class BasicVehicleReadDto {
+    public int Id { get; set; }
+    public string PlateNumber { get; set; }
+    public int Capacity { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class VehicleDeleteIncludedDto : BasicVehicleReadDto {
     public bool IsDeleted { get; set; }
 }
 

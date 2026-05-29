@@ -10,7 +10,8 @@ public class CompanyMappingProfile : Profile
     public CompanyMappingProfile()
     {
         // --- OKUMA (Entity'den DTO'ya) ---
-        CreateMap<Company, CompanyReadDto>();
+        CreateMap<Company, DetailedCompanyReadDto>();
+        CreateMap<Company, BasicCompanyReadDto>();
         CreateMap<Company, CompanyDeleteIncludedDto>();
 
         // --- YAZMA (DTO'dan Entity'ye) ---

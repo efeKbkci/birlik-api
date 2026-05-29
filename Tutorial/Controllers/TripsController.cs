@@ -22,7 +22,7 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
     {
         var dto = await _context.Trips
             .Where(t => t.Id == id)
-            .ProjectTo<TripReadDashboardDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<DetailedTripReadDashboardDto>(_mapper.ConfigurationProvider)
             .FirstOrDefaultAsync();
 
         return Ok(dto);
@@ -75,7 +75,7 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(result);
     }
 
-    [HttpGet("dashboardView")] // Bir yolcu seferleri görüntülemek istediði zaman çaðrýlacak metot.  
+    [HttpGet("dashboardView")] // Bir yazýhane seferleri görüntülemek istediði zaman çaðrýlacak metot.  
     public async Task<IActionResult> GetTrips([FromQuery] DashboardTripFilter filter)
     {
         // 1. Temel kural: Yazýhane kesinlikle kendi ID'sini yollamalý.
@@ -102,7 +102,7 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
             query = query.Where(t => t.DepartureTime <= filter.EndDate.Value);
 
         var result = await query
-            .ProjectTo<TripReadDashboardDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<BasicTripReadDashboardDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
         return Ok(result);

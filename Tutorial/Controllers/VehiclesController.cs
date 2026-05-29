@@ -20,7 +20,7 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
     {
         var vehicleDto = await _context.Vehicles
                                 .Where(v => v.Id == id)
-                                .ProjectTo<VehicleReadDto>(_mapper.ConfigurationProvider)
+                                .ProjectTo<DetailedVehicleReadDto>(_mapper.ConfigurationProvider)
                                 .FirstOrDefaultAsync();
 
         if (vehicleDto == null)
@@ -36,7 +36,7 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
     {
         var dtoList = await _context.Vehicles
             .Where(v => v.CompanyId == companyId)
-            .ProjectTo<VehicleReadDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<BasicVehicleReadDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
         return Ok(dtoList);

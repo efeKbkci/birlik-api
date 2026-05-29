@@ -20,7 +20,7 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
     {
         var driverDto = await _context.Drivers
                                 .Where(d => d.Id == id)
-                                .ProjectTo<DriverReadDto>(_mapper.ConfigurationProvider)
+                                .ProjectTo<DetailedDriverReadDto>(_mapper.ConfigurationProvider)
                                 .FirstOrDefaultAsync();
                                 
         if (driverDto == null)
@@ -36,7 +36,7 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
     {
         var dtoList = await _context.Drivers
             .Where(d => d.CompanyId == companyId)
-            .ProjectTo<DriverReadDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<BasicDriverReadDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
         return Ok(dtoList);

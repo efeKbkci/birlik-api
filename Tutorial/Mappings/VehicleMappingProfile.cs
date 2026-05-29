@@ -8,7 +8,8 @@ public class VehicleMappingProfile : Profile
 {
     public VehicleMappingProfile() 
     {
-        CreateMap<Vehicle, VehicleReadDto>();
+        CreateMap<Vehicle, DetailedVehicleReadDto>();
+        CreateMap<Vehicle, BasicVehicleReadDto>();
         CreateMap<Vehicle, VehicleDeleteIncludedDto>();
         CreateMap<VehicleCreateDto, Vehicle>();
         CreateMap<VehiclePatchDto, Vehicle>()

@@ -8,7 +8,8 @@ public class StopMappingProfile : Profile
 {
     public StopMappingProfile()
     {
-        CreateMap<Stop, StopReadDto>();
+        CreateMap<Stop, DetailedStopReadDto>();
+        CreateMap<Stop, BasicStopReadDto>();
         CreateMap<Stop, StopDeleteIncludedDto>();
 
         CreateMap<StopCreateDto, Stop>()

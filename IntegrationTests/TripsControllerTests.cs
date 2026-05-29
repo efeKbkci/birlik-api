@@ -13,13 +13,13 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
     private async Task<(int companyId, int routeId, int vehicleId, int driverId)> SetupTripDependencies()
     {
         var cRes = await _client.PostAsJsonAsync("/api/companies", TestDataFactory.CreateNewCompanyObject());
-        var companyId = (await cRes.Content.ReadFromJsonAsync<CompanyReadDto>())!.Id;
+        var companyId = (await cRes.Content.ReadFromJsonAsync<DetailedCompanyReadDto>())!.Id;
 
         var dRes = await _client.PostAsJsonAsync("/api/drivers", TestDataFactory.CreateNewDriverObject(companyId));
-        var driverId = (await dRes.Content.ReadFromJsonAsync<DriverReadDto>())!.Id;
+        var driverId = (await dRes.Content.ReadFromJsonAsync<DetailedDriverReadDto>())!.Id;
 
         var vRes = await _client.PostAsJsonAsync("/api/vehicles", TestDataFactory.CreateNewVehicleObject(companyId, driverId));
-        var vehicleId = (await vRes.Content.ReadFromJsonAsync<VehicleReadDto>())!.Id;
+        var vehicleId = (await vRes.Content.ReadFromJsonAsync<DetailedVehicleReadDto>())!.Id;
 
         var city1Res = await _client.PostAsJsonAsync("/api/cities", TestDataFactory.CreateNewCityObject());
         var city1Id = (await city1Res.Content.ReadFromJsonAsync<CityReadDto>())!.Id;
@@ -46,7 +46,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
         // IntegrationTestBase içerisindeki JSON - Enum class ayarı sayesinde createDto içerisindeki enum veri yapısı bir string olarak JSON içerisinde serileştirilecek.
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
-        var createdTrip = await postResponse.Content.ReadFromJsonAsync<TripReadDashboardDto>(_jsonOptions); // Dönüş tipini kontrol et
+        var createdTrip = await postResponse.Content.ReadFromJsonAsync<DetailedTripReadDashboardDto>(_jsonOptions); // Dönüş tipini kontrol et
         Assert.NotNull(createdTrip);
         var tripId = createdTrip.Id;
 
@@ -61,7 +61,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
 
         // Doğrulama
         var verifyPatchRes = await _client.GetAsync($"/api/trips/{tripId}");
-        var updatedTrip = await verifyPatchRes.Content.ReadFromJsonAsync<TripReadDashboardDto>(_jsonOptions);
+        var updatedTrip = await verifyPatchRes.Content.ReadFromJsonAsync<DetailedTripReadDashboardDto>(_jsonOptions);
         Assert.Equal((TripStatus)5, updatedTrip?.TripStatus);
     }
 
@@ -81,7 +81,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
 
         // 3. ASSERT
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var filteredTrips = await response.Content.ReadFromJsonAsync<List<TripReadDashboardDto>>(_jsonOptions);
+        var filteredTrips = await response.Content.ReadFromJsonAsync<List<BasicTripReadDashboardDto>>(_jsonOptions);
 
         Assert.NotNull(filteredTrips);
         Assert.Single(filteredTrips); // 2 sefer ekledik ama 1 tanesi gelmeli (Çünkü diğeri iptal)

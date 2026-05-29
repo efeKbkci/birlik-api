@@ -13,13 +13,13 @@ public class ReservationsControllerTests(InMemoryWebApplicationFactory factory) 
     private async Task<(int companyId, int routeId, int vehicleId, int driverId, int stopId, int passengerId)> SetupReservationDependencies()
     {
         var cRes = await _client.PostAsJsonAsync("/api/companies", TestDataFactory.CreateNewCompanyObject());
-        var companyId = (await cRes.Content.ReadFromJsonAsync<CompanyReadDto>())!.Id;
+        var companyId = (await cRes.Content.ReadFromJsonAsync<DetailedCompanyReadDto>())!.Id;
 
         var dRes = await _client.PostAsJsonAsync("/api/drivers", TestDataFactory.CreateNewDriverObject(companyId));
-        var driverId = (await dRes.Content.ReadFromJsonAsync<DriverReadDto>())!.Id;
+        var driverId = (await dRes.Content.ReadFromJsonAsync<DetailedDriverReadDto>())!.Id;
 
         var vRes = await _client.PostAsJsonAsync("/api/vehicles", TestDataFactory.CreateNewVehicleObject(companyId, driverId));
-        var vehicleId = (await vRes.Content.ReadFromJsonAsync<VehicleReadDto>())!.Id;
+        var vehicleId = (await vRes.Content.ReadFromJsonAsync<DetailedVehicleReadDto>())!.Id;
 
         var city1Res = await _client.PostAsJsonAsync("/api/cities", TestDataFactory.CreateNewCityObject());
         var city1Id = (await city1Res.Content.ReadFromJsonAsync<CityReadDto>())!.Id;
@@ -31,7 +31,7 @@ public class ReservationsControllerTests(InMemoryWebApplicationFactory factory) 
         var routeId = (await rRes.Content.ReadFromJsonAsync<RouteReadDto>(_jsonOptions))!.Id;
 
         var stopRes = await _client.PostAsJsonAsync("/api/stops", TestDataFactory.CreateNewStopObject(companyId, routeId));
-        var stopId = (await stopRes.Content.ReadFromJsonAsync<StopReadDto>())!.Id;
+        var stopId = (await stopRes.Content.ReadFromJsonAsync<DetailedStopReadDto>())!.Id;
 
         var pRes = await _client.PostAsJsonAsync("/api/passengers", TestDataFactory.CreateNewPassengerObject());
         var passengerId = (await pRes.Content.ReadFromJsonAsync<PassengerReadDto>())!.Id;
@@ -48,7 +48,7 @@ public class ReservationsControllerTests(InMemoryWebApplicationFactory factory) 
         var now = DateTime.UtcNow;
         var tripCreate = TestDataFactory.CreateNewTripObject(companyId, routeId, vehicleId, driverId, now.AddDays(1), (TripStatus)2);
         var tripRes = await _client.PostAsJsonAsync("/api/trips", tripCreate, _jsonOptions);
-        var tripId = (await tripRes.Content.ReadFromJsonAsync<TripReadDashboardDto>(_jsonOptions))!.Id;
+        var tripId = (await tripRes.Content.ReadFromJsonAsync<DetailedTripReadDashboardDto>(_jsonOptions))!.Id;
 
         // CREATE
         var createDto = TestDataFactory.CreateNewReservationObject(tripId, passengerId, stopId);
@@ -84,7 +84,7 @@ public class ReservationsControllerTests(InMemoryWebApplicationFactory factory) 
         var now = DateTime.UtcNow;
         var tripCreate = TestDataFactory.CreateNewTripObject(companyId, routeId, vehicleId, driverId, now.AddDays(1), (TripStatus)2);
         var tripRes = await _client.PostAsJsonAsync("/api/trips", tripCreate, _jsonOptions);
-        var tripId = (await tripRes.Content.ReadFromJsonAsync<TripReadDashboardDto>(_jsonOptions))!.Id;
+        var tripId = (await tripRes.Content.ReadFromJsonAsync<DetailedTripReadDashboardDto>(_jsonOptions))!.Id;
 
         // Create two different passengers + reservations
         var pRes2 = await _client.PostAsJsonAsync("/api/passengers", TestDataFactory.CreateNewPassengerObject());

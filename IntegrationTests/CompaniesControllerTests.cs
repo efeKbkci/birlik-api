@@ -27,14 +27,14 @@ public class CompaniesControllerTests(InMemoryWebApplicationFactory factory) : I
         var conflictedResponse = await _client.PostAsJsonAsync("/api/companies", conflictedRequest);
         Assert.Equal(HttpStatusCode.Conflict, conflictedResponse.StatusCode);
 
-        var createdCompany = await postResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
+        var createdCompany = await postResponse.Content.ReadFromJsonAsync<DetailedCompanyReadDto>();
         Assert.NotNull(createdCompany);
         var companyId = createdCompany.Id;
 
         // --- 3. READ: Oluşturulan Veriyi Doğrulama (GET) ---
         var getResponse = await _client.GetAsync($"/api/companies/{companyId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
-        var fetchedCompany = await getResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
+        var fetchedCompany = await getResponse.Content.ReadFromJsonAsync<DetailedCompanyReadDto>();
         Assert.Equal(properRequest.CompanyName, fetchedCompany?.CompanyName);
 
         // --- 4. UPDATE: Bilgileri Güncelleme (PATCH) ---
@@ -45,7 +45,7 @@ public class CompaniesControllerTests(InMemoryWebApplicationFactory factory) : I
 
         // Güncelleme kontrolü
         var getUpdatedResponse = await _client.GetAsync($"/api/companies/{companyId}");
-        var updatedCompany = await getUpdatedResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
+        var updatedCompany = await getUpdatedResponse.Content.ReadFromJsonAsync<DetailedCompanyReadDto>();
         Assert.Equal(newLocation, updatedCompany?.Location);
 
         // --- 5. DELETE: Yumuşak Silme (DELETE) ---

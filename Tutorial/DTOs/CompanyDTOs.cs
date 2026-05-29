@@ -1,6 +1,6 @@
 ﻿namespace Tutorial.DTOs;
 
-public class CompanyReadDto
+public class DetailedCompanyReadDto
 {
     public int Id { get; set; }
     public string CompanyName { get; set; }
@@ -9,7 +9,14 @@ public class CompanyReadDto
     public bool IsActive { get; set; }
 }
 
-public class CompanyDeleteIncludedDto : CompanyReadDto 
+public class BasicCompanyReadDto
+{
+    public int Id { get; set; }
+    public string CompanyName { get; set; }
+    public bool IsActive { get; set; }
+}
+
+public class CompanyDeleteIncludedDto : BasicCompanyReadDto 
 {
     public bool IsDeleted { get; set; }
 }

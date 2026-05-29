@@ -18,12 +18,12 @@ public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IC
         // Araç oluşturabilmek için önce bir Şirket ve bir Sürücü oluşturuyoruz.
         var companyDto = TestDataFactory.CreateNewCompanyObject();
         var companyResponse = await _client.PostAsJsonAsync("/api/companies", companyDto);
-        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
+        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<DetailedCompanyReadDto>();
         var companyId = createdCompany!.Id;
 
         var driverCreate = TestDataFactory.CreateNewDriverObject(companyId);
         var driverResponse = await _client.PostAsJsonAsync("/api/drivers", driverCreate);
-        var createdDriver = await driverResponse.Content.ReadFromJsonAsync<DriverReadDto>();
+        var createdDriver = await driverResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>();
         var driverId = createdDriver!.Id;
 
         // --- 1. ARRANGE: Araç Hazırlığı ---
@@ -33,14 +33,14 @@ public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IC
         var postResponse = await _client.PostAsJsonAsync("/api/vehicles", vehicleDto);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
-        var createdVehicle = await postResponse.Content.ReadFromJsonAsync<VehicleReadDto>();
+        var createdVehicle = await postResponse.Content.ReadFromJsonAsync<DetailedVehicleReadDto>();
         Assert.NotNull(createdVehicle);
         var vehicleId = createdVehicle.Id;
 
         // --- 3. READ (GET) ---
         var getResponse = await _client.GetAsync($"/api/vehicles/{vehicleId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
-        var fetchedVehicle = await getResponse.Content.ReadFromJsonAsync<VehicleReadDto>();
+        var fetchedVehicle = await getResponse.Content.ReadFromJsonAsync<DetailedVehicleReadDto>();
         Assert.Equal(vehicleDto.PlateNumber, fetchedVehicle?.PlateNumber);
         Assert.Equal(vehicleDto.Capacity, fetchedVehicle?.Capacity);
 
@@ -52,7 +52,7 @@ public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IC
 
         // Doğrula
         var getAfterPatch = await _client.GetAsync($"/api/vehicles/{vehicleId}");
-        var fetchedAfterPatch = await getAfterPatch.Content.ReadFromJsonAsync<VehicleReadDto>();
+        var fetchedAfterPatch = await getAfterPatch.Content.ReadFromJsonAsync<DetailedVehicleReadDto>();
         Assert.Equal(newPlate, fetchedAfterPatch?.PlateNumber);
 
         // --- 5. DELETE (Yumuşak Silme) ---

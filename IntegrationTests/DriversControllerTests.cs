@@ -18,7 +18,7 @@ public class DriversControllerTests(InMemoryWebApplicationFactory factory) : ICl
         // Sürücüyü ekleyebilmek için önce ona bir Şirket oluşturuyoruz.
         var companyDto = TestDataFactory.CreateNewCompanyObject();
         var companyResponse = await _client.PostAsJsonAsync("/api/companies", companyDto);
-        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<CompanyReadDto>();
+        var createdCompany = await companyResponse.Content.ReadFromJsonAsync<DetailedCompanyReadDto>();
         var companyId = createdCompany!.Id;
 
         // --- 1. ARRANGE: Sürücü Hazırlığı ---
@@ -28,14 +28,14 @@ public class DriversControllerTests(InMemoryWebApplicationFactory factory) : ICl
         var postResponse = await _client.PostAsJsonAsync("/api/drivers", driverDto);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
-        var createdDriver = await postResponse.Content.ReadFromJsonAsync<DriverReadDto>();
+        var createdDriver = await postResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>();
         Assert.NotNull(createdDriver);
         var driverId = createdDriver.Id;
 
         // --- 3. READ (GET) ---
         var getResponse = await _client.GetAsync($"/api/drivers/{driverId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
-        var fetchedDriver = await getResponse.Content.ReadFromJsonAsync<DriverReadDto>();
+        var fetchedDriver = await getResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>();
         Assert.Equal(driverDto.FirstName, fetchedDriver?.FirstName);
 
         // --- 4. UPDATE (PATCH) ---
