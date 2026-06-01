@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,9 +16,12 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
-    // Endpoint: GET api/companies/5
-    // Buradaki "{id}" ifadesi URL'den gelecek dinamik bir sayıdır.
-    // İçindeki isim ile metodun parametresindeki (int id) ismi aynı olmalıdır.
+    /// <summary>
+    /// ID ile eşleşen şirket bilgisini getirir.
+    /// </summary>
+    /// <response code="200">Şirket başarıyla bulundu. Yanıt gövdesinde şirket detayları yer alır.</response>
+    /// <response code="404">Şirket bulunamadı veya silinmiş.</response>
+    [ProducesResponseType(typeof(DetailedCompanyReadDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCompanyById(int id)
     {
@@ -25,7 +29,7 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
 
         if (company == null)
         {
-            return NotFound($"Firm with ID = {id} doesn't exist in DB.");
+            return NotFound();
         }
 
         // _mapper.Map<HedefTip>(KaynakVeri) 
@@ -34,8 +38,13 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
         return Ok(companyDto);
     }
 
-    // Kullanım (Silinenler Dahil): GET api/companies?includeDeleted=true
+    /// <summary>
+    /// Tüm şirketleri döner. Eğer includeDeleted=true verilirse silinmiş kayıtlar da alınır.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Şirket listesi döner. (Standart kullanıcılar için özet, includeDeleted=true ile silinmiş kayıtlar dahil admin görünümü)</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<BasicCompanyReadDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<CompanyDeleteIncludedDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetCompanies([FromQuery] bool includeDeleted = false)
     {
         // Sorguyu modifiye edebileceğimiz şekilde oluşturuyoruz.
@@ -59,6 +68,12 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
         return Ok(standardResult);
     }
 
+    /// <summary>
+    /// Yeni bir şirket oluşturur.
+    /// </summary>
+    /// <response code="201">Şirket başarıyla oluşturuldu. Oluşturulan şirket nesnesi döner.</response>
+    /// <response code="409">Aynı telefon numarasıyla çakışma durumunda döner.</response>
+    [ProducesResponseType(typeof(DetailedCompanyReadDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateCompany(CompanyCreateDto dto)
     {
@@ -81,6 +96,11 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
         return CreatedAtAction(nameof(GetCompanyById), new { id = newCompany.Id }, newCompany);
     }
 
+    /// <summary>
+    /// Belirtilen şirketin alanlarını günceller.
+    /// </summary>
+    /// <response code="204">Güncelleme başarılı.</response>
+    /// <response code="404">şirket bulunamadı.</response>
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateCompany(int id, CompanyPatchDto dto)
     {
@@ -102,6 +122,11 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
         return NoContent();
     }
 
+    /// <summary>
+    /// Şirketi soft-delete yöntemi ile siler.
+    /// </summary>
+    /// <response code="204">Silme başarılı.</response>
+    /// <response code="404">Şirket bulunamadı.</response>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCompany(int id)
     {
@@ -118,6 +143,13 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
         return NoContent();
     }
 
+    /// <summary>
+    /// Soft-deleted olan şirketi geri yükler.
+    /// </summary>
+    /// <response code="200">Şirket başarıyla geri yüklendi.</response>
+    /// <response code="404">Şirket bulunamadı.</response>
+    /// <response code="400">Şirket zaten silinmemişse döner.</response>
+    [ProducesResponseType(typeof(CompanyDeleteIncludedDto), StatusCodes.Status200OK)]
     [HttpPut("{id}/restore")]
     public async Task<IActionResult> RestoreCompany(int id)
     {
@@ -129,15 +161,16 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
                                     .FirstOrDefaultAsync(c => c.Id == id);
 
         if (company == null)
-            return NotFound($"{id} numaralı firma veri tabanında yok.");
+            return NotFound();
 
         if (!company.IsDeleted)
-            return BadRequest("Bu firma zaten silinmemiş.");
+            return BadRequest();
 
         company.IsDeleted = false;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Firma başarıyla kurtarıldı." });
+        var companyDto = _mapper.Map<CompanyDeleteIncludedDto>(company);    
+        return Ok(companyDto);
     }
 }
 

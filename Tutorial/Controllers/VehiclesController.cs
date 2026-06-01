@@ -1,5 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
@@ -15,6 +16,12 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
+    /// <summary>
+    /// ID ile eşleşen araç bilgisini getirir.
+    /// </summary>
+    /// <response code="200">Araç bulundu. Detaylar döner.</response>
+    /// <response code="404">Araç bulunamadı veya görünür değil.</response>
+    [ProducesResponseType(typeof(DetailedVehicleReadDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVehicleById(int id)
     {
@@ -31,6 +38,11 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return Ok(vehicleDto);
     }
 
+    /// <summary>
+    /// Belirtilen firmaya ait araçların özet listesini döner.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Araç listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<BasicVehicleReadDto>), StatusCodes.Status200OK)]
     [HttpGet("company/{companyId}")]
     public async Task<IActionResult> GetVehiclesByCompany(int companyId)
     {
@@ -42,6 +54,11 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return Ok(dtoList);
     }
 
+    /// <summary>
+    /// Belirtilen firmaya ait silinmiş araçları döner (admin görünümü).
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Silinmiş araçların listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<VehicleDeleteIncludedDto>), StatusCodes.Status200OK)]
     [HttpGet("company/{companyId}/deleted")]
     public async Task<IActionResult> GetDeletedVehiclesByCompany(int companyId)
     {
@@ -54,6 +71,11 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return Ok(dtoList);
     }
 
+    /// <summary>
+    /// Yeni bir araç oluşturur.
+    /// </summary>
+    /// <response code="201">Araç başarıyla oluşturuldu. Oluşturulan nesne döner.</response>
+    [ProducesResponseType(typeof(DetailedVehicleReadDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateVehicle(VehicleCreateDto dto)
     {
@@ -66,6 +88,11 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return CreatedAtAction(nameof(GetVehicleById), new { id = newVehicle.Id }, newVehicle);
     }
 
+    /// <summary>
+    /// Belirtilen aracı tamamen günceller (replace/put davranışı).
+    /// </summary>
+    /// <response code="204">Güncelleme başarılı.</response>
+    /// <response code="404">Araç bulunamadı.</response>
     [HttpPut("{id}")]
     public async Task<IActionResult> ReplaceVehicle(int id, [FromBody] VehicleCreateDto dto)
     {
@@ -73,7 +100,7 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
 
         if (vehicle == null)
         {
-            return NotFound($"Vehicle with ID = {id} doesn't exist in DB.");
+            return NotFound();
         }
 
         _mapper.Map(dto, vehicle);
@@ -83,6 +110,11 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return NoContent();
     }
 
+    /// <summary>
+    /// Mevcut aracın alanlarını kısmen günceller.
+    /// </summary>
+    /// <response code="204">Güncelleme başarılı.</response>
+    /// <response code="404">Araç bulunamadı.</response>
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateVehicle(int id, VehiclePatchDto dto)
     {
@@ -100,6 +132,11 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return NoContent();
     }
 
+    /// <summary>
+    /// Aracı soft-delete (görünmez) yapar.
+    /// </summary>
+    /// <response code="204">Silme başarılı.</response>
+    /// <response code="404">Araç bulunamadı.</response>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteVehicle(int id)
     {
@@ -115,6 +152,13 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         return NoContent();
     }
 
+    /// <summary>
+    /// Soft-deleted aracı geri yükler.
+    /// </summary>
+    /// <response code="200">Araç başarıyla geri yüklendi.</response>
+    /// <response code="404">Araç bulunamadı.</response>
+    /// <response code="400">Araç zaten silinmemişse döner.</response>
+    [ProducesResponseType(typeof(VehicleDeleteIncludedDto), StatusCodes.Status200OK)]
     [HttpPut("{id}/restore")]
     public async Task<IActionResult> RestoreVehicle(int id)
     {
@@ -123,14 +167,15 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
                             .FirstOrDefaultAsync(v => v.Id == id);
 
         if (vehicle == null)
-            return NotFound($"{id} numaralı araç veri tabanında yok.");
+            return NotFound();
 
         if (!vehicle.IsDeleted)
-            return BadRequest("Bu araç zaten silinmemiş.");
+            return BadRequest();
 
         vehicle.IsDeleted = false;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Araç başarıyla kurtarıldı." });
+        var vehicleDto = _mapper.Map<VehicleDeleteIncludedDto>(vehicle);
+        return Ok(vehicleDto);
     }
 }

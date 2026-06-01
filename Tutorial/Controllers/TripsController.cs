@@ -1,6 +1,7 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
@@ -17,8 +18,14 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
+    /// <summary>
+    /// ID ile eþleþen seferin bilgilerini getirir.
+    /// </summary>
+    /// <response code="200">Sefer baþarýyla bulundu. Detaylar döner.</response>
+    /// <response code="404">Sefer bulunamadý.</response>
+    [ProducesResponseType(typeof(DetailedTripReadDashboardDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetTripById(int id) 
+    public async Task<IActionResult> GetTripById(int id)
     {
         var dto = await _context.Trips
             .Where(t => t.Id == id)
@@ -28,7 +35,12 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(dto);
     }
 
-    [HttpGet("passengerView")] // Bir yolcu seferleri görüntülemek istediði zaman çaðrýlacak metot.  
+    /// <summary>
+    /// Yolcu görünümü: filtreye göre uygun seferleri döner.
+    /// </summary>
+    /// <response code="200">Ýþlem baþarýlý. Sefer listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<TripReadPassengerDto>), StatusCodes.Status200OK)]
+    [HttpGet("passengerView")]
     public async Task<IActionResult> GetTrips([FromQuery] PassengerTripFilter filter)
     {
         // 1. ZAMANI YAKALA: Botun mesajý attýðý o kritik an (Örn: 23.05.2026 14:46:12)
@@ -75,6 +87,11 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(result);
     }
 
+    /// <summary>
+    /// Yazýhane görünümü: filtreye göre uygun seferleri döner.
+    /// </summary>
+    /// <response code="200">Ýþlem baþarýlý. Sefer listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<BasicTripReadDashboardDto>), StatusCodes.Status200OK)]
     [HttpGet("dashboardView")] // Bir yazýhane seferleri görüntülemek istediði zaman çaðrýlacak metot.  
     public async Task<IActionResult> GetTrips([FromQuery] DashboardTripFilter filter)
     {
@@ -108,6 +125,11 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(result);
     }
 
+    /// <summary>
+    /// Yeni bir sefer oluþturur.
+    /// </summary>
+    /// <response code="201">Sefer baþarýyla oluþturuldu. Oluþturulan nesne döner.</response>
+    [ProducesResponseType(typeof(DetailedTripReadDashboardDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateTrip(TripCreateDto dto)
     {
@@ -121,12 +143,17 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
         return CreatedAtAction(nameof(GetTripById), new { id = entity.Id }, entity);
     }
 
+    /// <summary>
+    /// Mevcut seferin alanlarýný kýsmen günceller.
+    /// </summary>
+    /// <response code="204">Güncelleme baþarýlý.</response>
+    /// <response code="404">Sefer bulunamadý.</response>
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateTrip(int id, TripPatchDto dto)
     {
         var entity = await _context.Trips.FindAsync(id);
         if (entity == null)
-            return NotFound($"Trip with ID = {id} doesn't exist in DB.");
+            return NotFound();
 
         _mapper.Map(dto, entity);
         await _context.SaveChangesAsync();

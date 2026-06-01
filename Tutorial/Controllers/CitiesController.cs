@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
 using Tutorial.DTOs;
 using Tutorial.Entities;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 
 namespace Tutorial.Controllers
@@ -15,8 +16,14 @@ namespace Tutorial.Controllers
     public class CitiesController(AppDbContext context, IMapper mapper) : ControllerBase
     {
         private readonly AppDbContext _context = context;
-        private readonly IMapper _mapper = mapper;   
+        private readonly IMapper _mapper = mapper;
 
+        /// <summary>
+        /// ID ile eşleşen şehir bilgisini getirir.
+        /// </summary>
+        /// <response code="200">Şehir başarıyla bulundu. Detaylar döner.</response>
+        /// <response code="404">Şehir bulunamadı.</response>
+        [ProducesResponseType(typeof(CityReadDto), StatusCodes.Status200OK)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCityById(int id)
         {
@@ -31,6 +38,11 @@ namespace Tutorial.Controllers
             return Ok(cityDto);
         }
 
+        /// <summary>
+        /// Yeni bir şehir oluşturur. 
+        /// </summary>
+        /// <response code="201">Şehir başarıyla oluşturuldu. Oluşturulan nesne döner.</response>
+        [ProducesResponseType(typeof(CityReadDto), StatusCodes.Status201Created)]
         [HttpPost]
         public async Task<IActionResult> CreateCity(CityCreateDto dto)
         {
@@ -43,6 +55,11 @@ namespace Tutorial.Controllers
             return CreatedAtAction(nameof(GetCityById), new { id = newCity.Id }, newCity);
         }
 
+        /// <summary>
+        /// ID ile eşleşen şehrin bilgilerini günceller.
+        /// </summary>
+        /// <response code="204">Güncelleme başarılı.</response>
+        /// <response code="404">Şehir bulunamadı.</response>
         [HttpPatch("{id}")]
         public async Task<IActionResult> UpdateCity(int id, CityPatchDto dto)
         {
@@ -60,6 +77,11 @@ namespace Tutorial.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// ID ile eşleşen şehri Soft Delete yöntemi ile siler.
+        /// </summary>
+        /// <response code="204">Silme başarılı.</response>
+        /// <response code="404">Şehir bulunamadı.</response>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCity(int id)
         {
@@ -75,6 +97,13 @@ namespace Tutorial.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Silinen bir şehri kurtarır ve tekrar görünür hale getirir.
+        /// </summary>
+        /// <response code="200">Şehir başarıyla geri yüklendi.</response>
+        /// <response code="404">Şehir bulunamadı.</response>
+        /// <response code="400">Şehir zaten silinmemişse döner.</response>
+        [ProducesResponseType(typeof(CityDeleteIncludedDto), StatusCodes.Status200OK)]
         [HttpPut("{id}/restore")]
         public async Task<IActionResult> RestoreCity(int id)
         {
@@ -83,15 +112,17 @@ namespace Tutorial.Controllers
                                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (city == null)
-                return NotFound($"{id} numaralı şehir veri tabanında yok.");
+                return NotFound();
 
             if (!city.IsDeleted)
-                return BadRequest("Bu şehir zaten silinmemiş.");
+                return BadRequest();
 
             city.IsDeleted = false;
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "Şehir başarıyla kurtarıldı." });
+            var cityDto = _mapper.Map<CityDeleteIncludedDto>(city);
+
+            return Ok(cityDto);
         }
     }
 }

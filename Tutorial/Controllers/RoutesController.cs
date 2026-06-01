@@ -17,6 +17,12 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
+    /// <summary>
+    /// ID ile eşleşen güzergah bilgisini getirir.
+    /// </summary>
+    /// <response code="200">Güzergah bulundu. Detaylar döner.</response>
+    /// <response code="404">Güzergah bulunamadı.</response>
+    [ProducesResponseType(typeof(RouteReadDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetRouteById(int id)
     {
@@ -31,6 +37,11 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
         return Ok(routeDto);
     }
 
+    /// <summary>
+    /// Yeni bir güzergah oluşturur.
+    /// </summary>
+    /// <response code="201">Güzergah başarıyla oluşturuldu. Oluşturulan nesne döner.</response>
+    [ProducesResponseType(typeof(RouteReadDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateRoute(RouteCreateDto dto)
     {
@@ -43,6 +54,11 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
         return CreatedAtAction(nameof(GetRouteById), new { id = newRoute.Id }, newRoute);
     }
 
+    /// <summary>
+    /// Belirtilen güzergahın verilerini kısmen günceller.
+    /// </summary>
+    /// <response code="204">Güncelleme başarılı.</response>
+    /// <response code="404">Güzergah bulunamadı.</response>
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateRoute(int id, RoutePatchDto dto)
     {
@@ -60,6 +76,11 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
         return NoContent();
     }
 
+    /// <summary>
+    /// Güzergahı soft-delete (görünmez) yapar.
+    /// </summary>
+    /// <response code="204">Silme başarılı.</response>
+    /// <response code="404">Güzergah bulunamadı.</response>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteRoute(int id)
     {
@@ -75,6 +96,13 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
         return NoContent();
     }
 
+    /// <summary>
+    /// Soft-deleted güzergahı geri yükler.
+    /// </summary>
+    /// <response code="200">Güzergah başarıyla geri yüklendi.</response>
+    /// <response code="404">Güzergah bulunamadı.</response>
+    /// <response code="400">Güzergah zaten silinmemişse döner.</response>
+    [ProducesResponseType(typeof(RouteDeleteIncludedDto), StatusCodes.Status200OK)]
     [HttpPut("{id}/restore")]
     public async Task<IActionResult> RestoreRoute(int id)
     {
@@ -83,14 +111,15 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
                             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (route == null)
-            return NotFound($"{id} numaralı güzergah veri tabanında yok.");
+            return NotFound();
 
         if (!route.IsDeleted)
-            return BadRequest("Bu güzergah zaten silinmemiş.");
+            return BadRequest();
 
         route.IsDeleted = false;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Güzergah başarıyla kurtarıldı." });
+        var routeDto = _mapper.Map<RouteDeleteIncludedDto>(route);
+        return Ok(routeDto);
     }
 }

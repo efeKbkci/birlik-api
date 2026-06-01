@@ -1,5 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
@@ -15,6 +16,12 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
+    /// <summary>
+    /// ID ile eşleşen durak bilgisini getirir.
+    /// </summary>
+    /// <response code="200">Durak bulundu. Detaylar döner.</response>
+    /// <response code="404">Durak bulunamadı veya silinmiş.</response>
+    [ProducesResponseType(typeof(DetailedStopReadDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetStopById(int id)
     {
@@ -29,6 +36,11 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(dto);
     }
 
+    /// <summary>
+    /// Belirtilen şirket ve güzergaha ait durakların özet listesini döner.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Durak listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<BasicStopReadDto>), StatusCodes.Status200OK)]
     [HttpGet]
     public async Task<IActionResult> GetStops([FromQuery] int companyId, [FromQuery] int routeId)
     {
@@ -41,6 +53,11 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(list);
     }
 
+    /// <summary>
+    /// Belirtilen firmaya ait silinmiş durakları döner.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Silinmiş durakların listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<StopDeleteIncludedDto>), StatusCodes.Status200OK)]
     [HttpGet("company/{companyId}/deleted")]
     public async Task<IActionResult> GetDeletedStopsByCompany(int companyId)
     {
@@ -53,6 +70,11 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         return Ok(list);
     }
 
+    /// <summary>
+    /// Yeni bir durak oluşturur.
+    /// </summary>
+    /// <response code="201">Durak başarıyla oluşturuldu. Oluşturulan nesne döner.</response>
+    [ProducesResponseType(typeof(DetailedStopReadDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateStop(StopCreateDto dto)
     {
@@ -64,12 +86,17 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         return CreatedAtAction(nameof(GetStopById), new { id = entity.Id }, entity);
     }
 
+    /// <summary> 
+    /// Mevcut durak bilgisini günceller. 
+    /// </summary> 
+    /// <response code="204">Güncelleme başarılı.</response> 
+    /// <response code="404">Durak bulunamadı.</response> 
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateStop(int id, StopPatchDto dto)
     {
         var entity = await _context.Stops.FindAsync(id);
         if (entity == null)
-            return NotFound($"Stop with ID = {id} doesn't exist in DB.");
+            return NotFound();
 
         _mapper.Map(dto, entity);
         await _context.SaveChangesAsync();
@@ -77,12 +104,17 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         return NoContent();
     }
 
+    /// <summary> 
+    /// Durakı soft-delete (görünmez) yapar.
+    /// </summary> 
+    /// <response code="204">Silme başarılı.</response> 
+    /// <response code="404">Durak bulunamadı.</response> 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteStop(int id)
     {
         var entity = await _context.Stops.FindAsync(id);
         if (entity == null)
-            return NotFound($"Stop with ID = {id} doesn't exist in DB.");
+            return NotFound();
 
         entity.IsDeleted = true;
         await _context.SaveChangesAsync();
@@ -90,22 +122,30 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
         return NoContent();
     }
 
+    /// <summary>
+    /// Soft-deleted durakı geri yükler.
+    /// </summary>
+    /// <response code="200">Durak başarıyla geri yüklendi. Bilgilendirme mesajı döner.</response>
+    /// <response code="404">Durak bulunamadı.</response>
+    /// <response code="400">Durak zaten silinmemişse döner.</response>
+    [ProducesResponseType(typeof(StopDeleteIncludedDto), StatusCodes.Status200OK)]
     [HttpPut("{id}/restore")]
     public async Task<IActionResult> RestoreStop(int id)
     {
-        var entity = await _context.Stops
+        var stop = await _context.Stops
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(s => s.Id == id);
 
-        if (entity == null)
-            return NotFound($"{id} numaral� durak veri taban�nda yok.");
+        if (stop == null)
+            return NotFound();
 
-        if (!entity.IsDeleted)
-            return BadRequest("Bu durak zaten silinmemi�.");
+        if (!stop.IsDeleted)
+            return BadRequest();
 
-        entity.IsDeleted = false;
+        stop.IsDeleted = false;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Durak ba�ar�yla kurtar�ld�." });
+        var stopDto = _mapper.Map<StopDeleteIncludedDto>(stop); 
+        return Ok(stopDto);
     }
 }

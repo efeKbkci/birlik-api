@@ -1,5 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
@@ -15,6 +16,12 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
+    /// <summary>
+    /// ID ile eşleşen rezervasyonun detaylarını getirir.
+    /// </summary>
+    /// <response code="200">Rezervasyon bulundu. Detaylar döner.</response>
+    /// <response code="404">Rezervasyon bulunamadı veya silinmiş.</response>
+    [ProducesResponseType(typeof(DetailedReservationReadDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetReservationById(int id)
     {
@@ -29,6 +36,11 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
         return Ok(dto);
     }
 
+    /// <summary>
+    /// Belirli bir sefere ait rezervasyonların özet listesini döner.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Rezervasyon listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<BasicReservationReadDto>), StatusCodes.Status200OK)]
     [HttpGet("trip/{tripId}")]
     public async Task<IActionResult> GetReservationsByTrip(int tripId)
     {
@@ -40,6 +52,11 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
         return Ok(list);
     }
 
+    /// <summary>
+    /// Yeni bir rezervasyon oluşturur.
+    /// </summary>
+    /// <response code="201">Rezervasyon başarıyla oluşturuldu. Oluşturulan nesne döner.</response>
+    [ProducesResponseType(typeof(DetailedReservationReadDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateReservation(ReservationCreateDto dto)
     {
@@ -51,6 +68,11 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
         return CreatedAtAction(nameof(GetReservationById), new { id = entity.Id }, entity);
     }
 
+    /// <summary>
+    /// Mevcut rezervasyonun alanlarını günceller.
+    /// </summary>
+    /// <response code="204">Güncelleme başarılı.</response>
+    /// <response code="404">Rezervasyon bulunamadı.</response>
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateReservation(int id, ReservationPatchDto dto)
     {

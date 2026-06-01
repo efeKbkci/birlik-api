@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
@@ -15,6 +16,12 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
     private readonly AppDbContext _context = context;
     private readonly IMapper _mapper = mapper;
 
+    /// <summary>
+    /// ID ile eşleşen sürücü bilgilerini getirir.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Sürücü bilgilerini döner.</response>
+    /// <response code="404">Sürücü bulunamadı.</response>
+    [ProducesResponseType(typeof(DetailedDriverReadDto), StatusCodes.Status200OK)]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetDriverById(int id)
     {
@@ -25,12 +32,17 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
                                 
         if (driverDto == null)
         {
-            return NotFound($"Driver with ID = {id} doesn't exist or inactive in DB.");
+            return NotFound();
         }
 
         return Ok(driverDto);
     }
 
+    /// <summary>
+    /// Belirtilen firmaya ait sürücülerin özet listesini döner.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Sürücü listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<BasicDriverReadDto>), StatusCodes.Status200OK)]
     [HttpGet("company/{companyId}")]
     public async Task<IActionResult> GetDriversByCompany(int companyId)
     {
@@ -42,6 +54,11 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
         return Ok(dtoList);
     }
 
+    /// <summary>
+    /// Belirtilen firmaya ait silinmiş sürücüleri döner.
+    /// </summary>
+    /// <response code="200">İşlem başarılı. Silinmiş sürücülerin listesi döner.</response>
+    [ProducesResponseType(typeof(IEnumerable<DriverDeleteIncludedDto>), StatusCodes.Status200OK)]
     [HttpGet("company/{companyId}/deleted")]
     public async Task<IActionResult> GetDeletedDriversByCompany(int companyId)
     {
@@ -54,6 +71,11 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
         return Ok(dtoList);
     }
 
+    /// <summary>
+    /// Yeni bir sürücü oluşturur.
+    /// </summary>
+    /// <response code="201">Sürücü başarıyla oluşturuldu. Oluşturulan nesne döner.</response>
+    [ProducesResponseType(typeof(DetailedDriverReadDto), StatusCodes.Status201Created)]
     [HttpPost]
     public async Task<IActionResult> CreateDriver(DriverCreateDto dto)
     {
@@ -66,6 +88,11 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
         return CreatedAtAction(nameof(GetDriverById), new { id = newDriver.Id }, newDriver);
     }
 
+    /// <summary>
+    /// Mevcut sürücünün bilgilerini günceller.
+    /// </summary>
+    /// <response code="204">Güncelleme başarılı.</response>
+    /// <response code="404">Sürücü bulunamadı.</response>
     [HttpPatch("{id}")]
     public async Task<IActionResult> UpdateDriver(int id, DriverPatchDto dto) 
     {
@@ -73,7 +100,7 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
 
         if (driver == null)
         {
-            return NotFound($"Driver with ID = {id} doesn't exist in DB.");
+            return NotFound();
         }
 
         _mapper.Map(dto, driver);
@@ -83,13 +110,18 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
         return NoContent();
     }
 
+    /// <summary>
+    /// Sürücüyü soft-delete ile görünmez yapar.
+    /// </summary>
+    /// <response code="204">Silme başarılı.</response>
+    /// <response code="404">Sürücü bulunamadı.</response>
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteDriver(int id) 
     {
         var driver = await _context.Drivers.FindAsync(id);
 
         if (driver == null)
-            return NotFound($"Driver with ID = {id} doesn't exist in DB.");
+            return NotFound();
 
         driver.IsDeleted = true; // Soft Delete işlemi ile veriyi görünmez yapıyoruz.
 
@@ -98,6 +130,13 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
         return NoContent();
     }
 
+    /// <summary>
+    /// Soft-deleted sürücüyü geri yükler.
+    /// </summary>
+    /// <response code="200">Sürücü başarıyla geri yüklendi.</response>
+    /// <response code="404">Sürücü bulunamadı.</response>
+    /// <response code="400">Sürücü zaten aktif.</response>
+    [ProducesResponseType(typeof(DriverDeleteIncludedDto), StatusCodes.Status200OK)]
     [HttpPut("{id}/restore")]
     public async Task<IActionResult> RestoreDriver(int id) 
     {
@@ -106,14 +145,15 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
                             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (driver == null)
-            return NotFound($"{id} numaralı sürücü veri tabanında yok.");
+            return NotFound();
 
         if (!driver.IsDeleted)
-            return BadRequest("Bu sürücü zaten silinmemiş.");
+            return BadRequest();
 
         driver.IsDeleted = false;
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Sürücü başarıyla kurtarıldı." });
+        var driverDto = _mapper.Map<DriverDeleteIncludedDto>(driver);
+        return Ok(driverDto);
     }
 }

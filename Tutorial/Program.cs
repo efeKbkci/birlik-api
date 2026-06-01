@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore; // EF Core'un komutlarý için gerekli
 using Microsoft.Extensions.DependencyInjection;
 using Tutorial.Context; // Kendi yazdýðýmýz DbContext'in yolu
 using Tutorial.Mappings;
-using System.Text.Json.Serialization; 
+using System.Text.Json.Serialization;
+using System.Reflection;
+using System.IO;
 
 // ==========================================
 // BÖLÜM 1: UYGULAMA KURULUMU VE SERVÝSLER
@@ -22,7 +24,17 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 // 2. Swagger'ý (API dökümantasyon/test aracý) sisteme tanýtýyoruz
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Projenin derlenmiþ ismini dinamik olarak alýr (Örn: "Tutorial.xml")
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+
+    // Uygulamanýn çalýþtýðý dizin ile dosya adýný birleþtirerek tam yolu bulur
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+
+    // Swagger'a bu XML dosyasýný okumasýný söyler
+    options.IncludeXmlComments(xmlPath);
+});
 
 // 3. Veritabaný baðlantýmýzý (DbContext) sisteme dahil ediyoruz (Dependency Injection)
 builder.Services.AddDbContext<AppDbContext>(options =>
