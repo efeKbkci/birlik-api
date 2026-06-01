@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: vip_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  vip_backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: vip_api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      # ASP.NET kuralı: İki alt tire (__) iç içe JSON objelerini temsil eder. 
+      # Bu satır, appsettings içindeki ConnectionStrings:DefaultConnection'ı ezer!
+      - ConnectionStrings__DefaultConnection=Server=postgres_db;Port=5432;Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres_db
+    networks:
+      - app_network
+
+volumes:
+  pgdata:
+
+networks:
+  app_network:
+    driver: bridge
