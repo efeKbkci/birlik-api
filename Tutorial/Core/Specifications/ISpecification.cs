@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Tutorial.Core.Specifications;
 
+// Dependency Inversion prensibinin uygulanması için bir interface tanımlıyoruz.
 public interface ISpecification<T>
 {
     /* Func<T, bool> : T türünde bir nesne alan ve bool döndüren bir delege türüdür. 

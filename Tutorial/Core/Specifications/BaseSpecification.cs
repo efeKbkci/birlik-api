@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Tutorial.Core.Specifications;
 
+// Aşağıdaki sınıfın soyut (abstract) olarak tanımlanmasının sebebi, bu sınıftan nesne oluşturulmasını engellemektir.
 public abstract class BaseSpecification<T> : ISpecification<T>
 {
     public List<Expression<Func<T, bool>>> Criterias { get; } = [];
