@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Tutorial.Entities;
-using Tutorial.Enums;
+using Birlik.Shared.Enums;
 
 namespace IntegrationTests.Helpers;
 

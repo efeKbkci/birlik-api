@@ -1,4 +1,4 @@
-﻿using Tutorial.Enums;
+﻿using Birlik.Shared.Enums;
 
 namespace Tutorial.Entities;
 

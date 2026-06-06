@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
-using Tutorial.DTOs;
 using Tutorial.Entities;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
+using Birlik.Shared.DTOs;
 
 namespace Tutorial.Controllers
 {

@@ -74,8 +74,13 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
     // Eðer veritabaný yoksa oluþturur, bekleyen migration varsa uygular
-    dbContext.Database.Migrate();
+    // Eðer veritabaný iliþkisel ise (SQL Server, PostgreSQL vb.) Migrate et (Bellekte çalýþan testler için.)
+    if (dbContext.Database.IsRelational())
+    {
+        dbContext.Database.Migrate();
+    }
 }
 
 // 8. Motoru çalýþtýr!

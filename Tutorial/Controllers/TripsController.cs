@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
 using Tutorial.Core.Specifications;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Tutorial.Entities;
-using Tutorial.Enums;
+using Birlik.Shared.Enums;
 
 namespace Tutorial.Controllers;
 

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings;

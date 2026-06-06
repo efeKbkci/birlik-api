@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Xunit;
 using IntegrationTests.Helpers;
 

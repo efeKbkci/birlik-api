@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Route = Tutorial.Entities.Route;
 
 namespace Tutorial.Mappings

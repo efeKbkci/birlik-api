@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using Bogus;
 using IntegrationTests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Xunit;
 
 namespace IntegrationTests;

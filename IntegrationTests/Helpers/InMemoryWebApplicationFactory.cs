@@ -17,7 +17,7 @@ public class InMemoryWebApplicationFactory : WebApplicationFactory<Program>
             // 1. Orijinal API'daki AppDbContext (gerçek veritabanı) ayarını bul
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
-
+            
             // 2. Eğer bulduysan, bu servisi sistemden kaldır
             if (descriptor != null)
             {

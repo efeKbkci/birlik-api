@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Tutorial.Entities;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 

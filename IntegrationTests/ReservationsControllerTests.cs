@@ -2,8 +2,8 @@ using IntegrationTests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
-using Tutorial.DTOs;
-using Tutorial.Enums;
+using Birlik.Shared.DTOs;
+using Birlik.Shared.Enums;
 using Xunit;
 
 namespace IntegrationTests;

@@ -3,8 +3,9 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Tutorial.Entities;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Tutorial.Controllers;
 
@@ -74,9 +75,12 @@ public class AdminsController(AppDbContext context, IMapper mapper) : Controller
     public async Task<IActionResult> LoginPreview([FromBody] AdminLoginDto request)
     {
         // E-posta veya Telefon numarası ile eşleşen admini bul
-        var admin = await _context.Admins.FirstOrDefaultAsync(a =>
-            a.Email == request.EmailOrPhone ||
-            a.PhoneNumber == request.EmailOrPhone);
+        var admin = await _context.Admins.
+            Include(a => a.Company).
+            FirstOrDefaultAsync(a =>
+                a.Email == request.EmailOrPhone ||
+                a.PhoneNumber == request.EmailOrPhone
+            );
 
         if (admin == null)
             return Unauthorized("Geçersiz e-posta/telefon numarası veya şifre.");
@@ -90,7 +94,9 @@ public class AdminsController(AppDbContext context, IMapper mapper) : Controller
         admin.LoginAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return Ok();
+        var companyDto = _mapper.Map<DetailedCompanyReadDto>(admin.Company);
+
+        return Ok(companyDto);
     }
 
     /// <summary>

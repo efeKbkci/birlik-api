@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Xunit;
 
 namespace IntegrationTests;

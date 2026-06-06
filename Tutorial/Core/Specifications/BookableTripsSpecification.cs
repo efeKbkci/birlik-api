@@ -5,9 +5,9 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Tutorial.DTOs;
+using Birlik.Shared.DTOs;
 using Tutorial.Entities;
-using Tutorial.Enums;
+using Birlik.Shared.Enums;
 
 namespace Tutorial.Core.Specifications;
 
