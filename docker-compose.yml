@@ -12,6 +12,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:              # EKSİK OLAN 1. SATIR
+      - app_network        # EKSİK OLAN 2. SATIR
 
   vip_backend:
     build: 
@@ -22,7 +24,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       # ASP.NET kuralı: İki alt tire (__) iç içe JSON objelerini temsil eder. 
       # Bu satır, appsettings içindeki ConnectionStrings:DefaultConnection'ı ezer!
-      - ConnectionStrings__DefaultConnection=Server=postgres_db;Port=5432;Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};
+      - ConnectionStrings__DefaultConnection=Host=postgres_db;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD};    
     ports:
       - "8080:8080"
     depends_on:
