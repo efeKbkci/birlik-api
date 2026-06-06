@@ -5,6 +5,7 @@ using Tutorial.Mappings;
 using System.Text.Json.Serialization;
 using System.Reflection;
 using System.IO;
+using Tutorial.Entities;
 
 // ==========================================
 // BÖLÜM 1: UYGULAMA KURULUMU VE SERVÝSLER
@@ -47,7 +48,7 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddAutoMapper(cfg => { }, typeof(CompanyMappingProfile), typeof(DriversMappingProfile),
                                            typeof(CityMappingProfile), typeof(RouteMappingProfile), 
                                            typeof(StopMappingProfile), typeof(TripMappingProfile),
-                                           typeof(VehicleMappingProfile));
+                                           typeof(VehicleMappingProfile), typeof(AdminMappingProfile));
 
 // ==========================================
 // BÖLÜM 2: UYGULAMA ÇALIÞMA ZAMANI (PIPELINE)

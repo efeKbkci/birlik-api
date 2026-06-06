@@ -16,6 +16,7 @@ namespace Tutorial.Context
         public DbSet<Stop> Stops { get; set; }
         public DbSet<Trip> Trips { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
+        public DbSet<Admin> Admins { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -59,6 +60,8 @@ namespace Tutorial.Context
             modelBuilder.Entity<Stop>().HasQueryFilter(s => !s.IsDeleted);
 
             modelBuilder.Entity<Passenger>().HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Admin>().HasQueryFilter(a => !a.IsDeleted);
         }
         // CreatedAt değeri satırlara otomatik olarak eklenir. 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
