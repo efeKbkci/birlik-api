@@ -84,5 +84,5 @@ public class PassengerTripFilter
 {
     [Required] public int? CompanyId { get; set; }
     [Required] public int? RouteId { get; set; }
-    [Required] public TripDaySelection? DaySelection { get; set; }
+    [Required] public TripDaySelection DaySelection { get; set; } = TripDaySelection.Today;
 }

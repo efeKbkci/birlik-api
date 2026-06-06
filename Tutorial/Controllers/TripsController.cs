@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
+using Tutorial.Core.Specifications;
 using Tutorial.DTOs;
 using Tutorial.Entities;
 using Tutorial.Enums;
@@ -43,42 +44,8 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
     [HttpGet("passengerView")]
     public async Task<IActionResult> GetTrips([FromQuery] PassengerTripFilter filter)
     {
-        // 1. ZAMANI YAKALA: Botun mesajý attýðý o kritik an (Örn: 23.05.2026 14:46:12)
-        DateTime messageTime = DateTime.UtcNow;
-
-        // 2. BUGÜNÜN GECE YARISI: Saati sýfýrla (Örn: 23.05.2026 00:00:00)
-        DateTime todayMidnight = messageTime.Date;
-
-        DateTime startTime;
-        DateTime endTime;
-
-        // Kullanýcý belirtmediyse (null ise) veya kasten Today seçtiyse
-        if (filter.DaySelection == null || filter.DaySelection == TripDaySelection.Today)
-        {
-            // ----------------------------------------------------------------
-            // SENARYO 1: BUGÜN (23.05.2026 14:46 - 23.05.2026 23:59)
-            // ----------------------------------------------------------------
-            startTime = messageTime; // Baþlangýç: 23.05.2026 14:46
-            endTime = todayMidnight.AddDays(1); // Bitiþ: 24.05.2026 00:00 (Yarýnýn baþlangýcý)
-        }
-        else
-        {
-            // ----------------------------------------------------------------
-            // SENARYO 2: YARIN (24.05.2026 00:00 - 24.05.2026 23:59)
-            // ----------------------------------------------------------------
-            startTime = todayMidnight.AddDays(1); // Baþlangýç: 24.05.2026 00:00
-            endTime = startTime.AddDays(1); // Bitiþ: 25.05.2026 00:00
-        }
-
-        // 3. VERÝ TABANI SORGUSU (SQL SEVÝYESÝ)
-        var query = _context.Trips.Where(t =>
-            t.CompanyId == filter.CompanyId.Value &&
-            t.RouteId == filter.RouteId.Value &&
-            t.DepartureTime >= startTime &&  // Baþlangýç saatine EÞÝT veya BÜYÜK
-            t.DepartureTime < endTime &&     // Bitiþ saatinden KESÝNLÝKLE KÜÇÜK
-            t.TripStatus == TripStatus.OnSale &&
-            t.Capacity > t.PassengerNumbers
-        );
+        var spec = new BookableTripsSpecification(filter);
+        var query = SpecificationEvaluator<Trip>.GetQuery(_context.Trips.AsQueryable(), spec);
 
         var result = await query
             .ProjectTo<TripReadPassengerDto>(_mapper.ConfigurationProvider)
@@ -95,28 +62,8 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
     [HttpGet("dashboardView")] // Bir yazýhane seferleri görüntülemek istediði zaman çaðrýlacak metot.  
     public async Task<IActionResult> GetTrips([FromQuery] DashboardTripFilter filter)
     {
-        // 1. Temel kural: Yazýhane kesinlikle kendi ID'sini yollamalý.
-        var query = _context.Trips.Where(t => t.CompanyId == filter.CompanyId);
-
-        // 2. Esnek Filtreler (Hangisi gönderildiyse o LINQ sorgusuna eklenir)
-        if (filter.RouteId.HasValue)
-            query = query.Where(t => t.RouteId == filter.RouteId);
-
-        if (filter.VehicleId.HasValue)
-            query = query.Where(t => t.VehicleId == filter.VehicleId);
-
-        if (filter.DriverId.HasValue)
-            query = query.Where(t => t.DriverId == filter.DriverId);
-
-        if (filter.Status.HasValue)
-            query = query.Where(t => t.TripStatus == filter.Status);
-
-        // Tarih Aralýðý Filtresi
-        if (filter.StartDate.HasValue)
-            query = query.Where(t => t.DepartureTime >= filter.StartDate.Value);
-
-        if (filter.EndDate.HasValue)
-            query = query.Where(t => t.DepartureTime <= filter.EndDate.Value);
+        var spec = new FilteredCompanyTripsSpecification(filter);
+        var query = SpecificationEvaluator<Trip>.GetQuery(_context.Trips.AsQueryable(), spec);
 
         var result = await query
             .ProjectTo<BasicTripReadDashboardDto>(_mapper.ConfigurationProvider)
