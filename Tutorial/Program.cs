@@ -70,6 +70,13 @@ app.UseAuthorization();
 // 7. Gelen istekleri, yazdýðýmýz Controller sýnýflarýna (Örn: TestController) yönlendir
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    // Eðer veritabaný yoksa oluþturur, bekleyen migration varsa uygular
+    dbContext.Database.Migrate();
+}
+
 // 8. Motoru çalýþtýr!
 app.Run();
 
