@@ -1,10 +1,12 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
+using Birlik.Shared.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
-using Birlik.Shared.DTOs;
 using Tutorial.Entities;
 
 namespace Tutorial.Controllers;
@@ -50,6 +52,35 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
             .ToListAsync();
 
         return Ok(list);
+    }
+    
+    [HttpGet("company/{companyId}/management-page")]
+    public async Task<IActionResult> GetReservationManagementPage(int companyId)
+    {
+        var today = DateTime.UtcNow.Date; // UTC kullanmak her zaman daha güvenlidir
+
+        // 1. Sadece CountAsync kullanarak RAM'e veri indirmeden sayıları alıyoruz
+        var requiresApprovalCount = await _context.Reservations
+            .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus == ReservationStatus.Pending);
+
+        var approvedTodayCount = await _context.Reservations
+            .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus == ReservationStatus.Confirmed && r.CreatedAt.Date == today);
+
+        // 2. LİSTEYİ ÇEK (Grid'e basılacak seferler)
+        var ReservationList = await _context.Reservations
+            .Where(r => r.CompanyId == companyId && r.ReservationStatus != ReservationStatus.Canceled)
+            .ProjectTo<ReservationListDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        // 3. PAKETLE VE GÖNDER (Tek bir DTO içinde birleştiriyoruz)
+        var pageData = new ReservationManagementPageDto
+        {
+            RequiresApprovalCount = requiresApprovalCount,
+            ApprovedTodayCount = approvedTodayCount,
+            Reservations = ReservationList
+        };
+
+        return Ok(pageData); // 200 OK ile JSON olarak fırlat
     }
 
     /// <summary>

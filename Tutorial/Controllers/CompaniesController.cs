@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
+using Birlik.Shared.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
-using Birlik.Shared.DTOs;
 using Tutorial.Entities;
 
 namespace Tutorial.Controllers;
@@ -66,6 +68,40 @@ public class CompaniesController(AppDbContext context, IMapper mapper) : Control
 
         var standardResult = _mapper.Map<List<BasicCompanyReadDto>>(companies);
         return Ok(standardResult);
+    }
+
+    [HttpGet("{companyId}/management-page")]
+    public async Task<IActionResult> GetCompanyManagementPage(int companyId)
+    {
+        // 1. Sadece CountAsync kullanarak RAM'e veri indirmeden sayıları alıyoruz
+        var vehiclesCount = await _context.Vehicles
+            .CountAsync(v => v.CompanyId == companyId);
+
+        var driversCount = await _context.Drivers
+            .CountAsync(d => d.CompanyId == companyId);
+
+        var reservationsCount = await _context.Reservations
+            .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus != ReservationStatus.Canceled);
+
+        // 2. LİSTEYİ ÇEK (Grid'e basılacak seferler)
+        var company = await _context.Companies
+            .Where(c => c.Id == companyId)
+            .FirstOrDefaultAsync();
+
+        // 3. PAKETLE VE GÖNDER (Tek bir DTO içinde birleştiriyoruz)
+        var pageData = new CompanyManagementPageDto
+        {
+            CompanyName = company.CompanyName,
+            ContactPhone = company.ContactPhone,
+            Location = company.Location,
+            Email = company.Email,
+            Status = company.IsActive ? "Active" : "Inactive",
+            TotalVehicles = vehiclesCount,
+            TotalDrivers = driversCount,
+            TotalReservations = reservationsCount
+        };
+
+        return Ok(pageData); // 200 OK ile JSON olarak fırlat
     }
 
     /// <summary>

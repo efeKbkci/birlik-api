@@ -1,5 +1,6 @@
 using AutoMapper;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings;
@@ -11,6 +12,7 @@ public class VehicleMappingProfile : Profile
         CreateMap<Vehicle, DetailedVehicleReadDto>();
         CreateMap<Vehicle, BasicVehicleReadDto>();
         CreateMap<Vehicle, VehicleDeleteIncludedDto>();
+        CreateMap<Vehicle, VehicleListDto>();
         CreateMap<VehicleCreateDto, Vehicle>();
         CreateMap<VehiclePatchDto, Vehicle>()
             .ForMember(dest => dest.CompanyId, opt => opt.MapFrom((src, dest) => src.CompanyId ?? dest.CompanyId))

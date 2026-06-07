@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
 using Tutorial.Core.Specifications;
-using Birlik.Shared.DTOs;
 using Tutorial.Entities;
 using Birlik.Shared.Enums;
+
+using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 
 namespace Tutorial.Controllers;
 
@@ -70,6 +72,40 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
             .ToListAsync();
 
         return Ok(result);
+    }
+
+    [HttpGet("company/{companyId}/management-page")]
+    public async Task<IActionResult> GetTripManagementPage(int companyId)
+    {
+        var today = DateTime.UtcNow.Date; // UTC kullanmak her zaman daha güvenlidir
+
+        // 1. Sadece CountAsync kullanarak RAM'e veri indirmeden sayýlarý alýyoruz
+        var todayTripsCount = await _context.Trips
+            .CountAsync(t => t.CompanyId == companyId && t.DepartureTime.Date == today && t.TripStatus != TripStatus.Canceled);
+
+        var activeVehiclesCount = await _context.Vehicles
+            .CountAsync(v => v.CompanyId == companyId && v.IsActive && !v.IsDeleted);
+
+        var activeDriversCount = await _context.Drivers
+            .CountAsync(d => d.CompanyId == companyId && d.IsActive && !d.IsDeleted);
+
+        // 2. LÝSTEYÝ ÇEK (Grid'e basýlacak seferler)
+        var tripsList = await _context.Trips
+            .Where(t => t.CompanyId == companyId && t.TripStatus != TripStatus.Canceled)
+            .OrderByDescending(t => t.DepartureTime)
+            .ProjectTo<TripListDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        // 3. PAKETLE VE GÖNDER (Tek bir DTO içinde birleþtiriyoruz)
+        var pageData = new TripManagementPageDto
+        {
+            TodayTotalTrips = todayTripsCount,
+            ActiveVehiclesCount = activeVehiclesCount,
+            ActiveDriversCount = activeDriversCount,
+            Trips = tripsList
+        };
+
+        return Ok(pageData); // 200 OK ile JSON olarak fýrlat
     }
 
     /// <summary>

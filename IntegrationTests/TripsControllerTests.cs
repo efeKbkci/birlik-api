@@ -1,12 +1,28 @@
-﻿using IntegrationTests.Helpers;
-using Microsoft.AspNetCore.Mvc.Testing;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Birlik.Shared.Enums;
+using Bogus;
+using IntegrationTests.Helpers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Tutorial.Context;
+using Tutorial.Controllers;
+using Tutorial.Entities;
 using Xunit;
 
 namespace IntegrationTests;
+
 
 public class TripsControllerTests(InMemoryWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
@@ -113,7 +129,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
         var trip5 = TestDataFactory.CreateNewTripObject(companyId, routeId, vehicleId, driverId, now.AddHours(1), (TripStatus)1);
 
         // Seferleri Veritabanına Yaz
-        foreach (var trip in (List<TripCreateDto>) [trip1, trip2, trip3, trip4, trip5])
+        foreach (var trip in (List<TripCreateDto>)[trip1, trip2, trip3, trip4, trip5])
         {
             await _client.PostAsJsonAsync("/api/trips", trip, _jsonOptions);
         }
@@ -142,4 +158,199 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
         Assert.DoesNotContain(tomorrowTrips, t => t.DepartureTime.Day == now.Day); // Bugünün seferi KESİNLİKLE gelmemeli
         Assert.Single(tomorrowTrips);
     }
+
+    /// <summary>
+    /// Create a fresh in-memory AppDbContext and seed it with deterministic test data for a single company.
+    /// The seeded data includes trips (some today, one cancelled, one other-date), vehicles and drivers with varying IsActive/IsDeleted flags.
+    /// </summary>
+    private static AppDbContext CreateAndSeedContext(int seededCompanyId, out int expectedTodayTrips, out int expectedActiveVehicles, out int expectedActiveDrivers, out List<TripListDto> expectedOrderedTrips)
+    {
+        var dbName = $"TripsDb_{Guid.NewGuid()}";
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(dbName)
+            .Options;
+
+        var ctx = new AppDbContext(options);
+
+        // Clear (ensures clean state) - not strictly necessary for unique DB but safe
+        ctx.Database.EnsureDeleted();
+        ctx.Database.EnsureCreated();
+
+        // Seed helper faker
+        var faker = new Faker("en");
+
+        // Cities
+        var c1 = new City { Id = 1, Name = "CityA" };
+        var c2 = new City { Id = 2, Name = "CityB" };
+        ctx.Cities.AddRange(c1, c2);
+
+        // Route
+        var route = new Route
+        {
+            Id = 1,
+            DepartureCity = c1,
+            ArrivalCity = c2,
+            DepartureCityId = c1.Id,
+            ArrivalCityId = c2.Id,
+            EstimatedDuration = 120
+        };
+        ctx.Routes.Add(route);
+
+        // Drivers
+        var activeDriver = new Driver
+        {
+            Id = 1,
+            CompanyId = seededCompanyId,
+            FirstName = "Active",
+            LastName = "Driver",
+            IsActive = true,
+            IsDeleted = false
+        };
+        var inactiveDriver = new Driver
+        {
+            Id = 2,
+            CompanyId = seededCompanyId,
+            FirstName = "Inactive",
+            LastName = "Driver",
+            IsActive = false,
+            IsDeleted = false
+        };
+        ctx.Drivers.AddRange(activeDriver, inactiveDriver);
+
+        // Vehicles
+        var vehicleActive = new Vehicle
+        {
+            Id = 1,
+            CompanyId = seededCompanyId,
+            PlateNumber = faker.Vehicle.Vin().Substring(0, 8),
+            IsActive = true,
+            IsDeleted = false
+        };
+        var vehicleDeleted = new Vehicle
+        {
+            Id = 2,
+            CompanyId = seededCompanyId,
+            PlateNumber = faker.Vehicle.Vin().Substring(0, 8),
+            IsActive = true,
+            IsDeleted = true
+        };
+        ctx.Vehicles.AddRange(vehicleActive, vehicleDeleted);
+
+        // Today and other dates
+        var today = DateTime.UtcNow.Date;
+        var trip1 = new Trip
+        {
+            Id = 1,
+            CompanyId = seededCompanyId,
+            Route = route,
+            RouteId = route.Id,
+            Vehicle = vehicleActive,
+            VehicleId = vehicleActive.Id,
+            Driver = activeDriver,
+            DriverId = activeDriver.Id,
+            DepartureTime = today.AddHours(10),
+            TripStatus = TripStatus.OnSale
+        };
+        var trip2 = new Trip
+        {
+            Id = 2,
+            CompanyId = seededCompanyId,
+            Route = route,
+            RouteId = route.Id,
+            Vehicle = vehicleActive,
+            VehicleId = vehicleActive.Id,
+            Driver = activeDriver,
+            DriverId = activeDriver.Id,
+            DepartureTime = today.AddHours(15),
+            TripStatus = TripStatus.OnSale
+        };
+        // Trip on different date but same company and not canceled
+        var trip3 = new Trip
+        {
+            Id = 3,
+            CompanyId = seededCompanyId,
+            Route = route,
+            RouteId = route.Id,
+            Vehicle = vehicleActive,
+            VehicleId = vehicleActive.Id,
+            Driver = activeDriver,
+            DriverId = activeDriver.Id,
+            DepartureTime = today.AddDays(-1).AddHours(8),
+            TripStatus = TripStatus.Scheduled
+        };
+        // Cancelled trip (should be excluded everywhere)
+        var cancelledTrip = new Trip
+        {
+            Id = 4,
+            CompanyId = seededCompanyId,
+            Route = route,
+            RouteId = route.Id,
+            Vehicle = vehicleActive,
+            VehicleId = vehicleActive.Id,
+            Driver = activeDriver,
+            DriverId = activeDriver.Id,
+            DepartureTime = today.AddHours(9),
+            TripStatus = TripStatus.Canceled
+        };
+        // Trip for another company (should not be counted)
+        var otherCompanyTrip = new Trip
+        {
+            Id = 5,
+            CompanyId = seededCompanyId + 1,
+            Route = route,
+            RouteId = route.Id,
+            Vehicle = vehicleActive,
+            VehicleId = vehicleActive.Id,
+            Driver = activeDriver,
+            DriverId = activeDriver.Id,
+            DepartureTime = today.AddHours(11),
+            TripStatus = TripStatus.OnSale
+        };
+
+        ctx.Trips.AddRange(trip1, trip2, trip3, cancelledTrip, otherCompanyTrip);
+
+        ctx.SaveChanges();
+
+        // Expected aggregates
+        expectedTodayTrips = 2; // trip1 & trip2 (cancelledTrip excluded)
+        expectedActiveVehicles = 1; // vehicleActive (vehicleDeleted is IsDeleted=true)
+        expectedActiveDrivers = 1; // activeDriver only
+
+        // Expected ordered trips (non-canceled for company, ordered desc by DepartureTime)
+        var expectedTrips = new List<TripListDto>
+            {
+                new TripListDto
+                {
+                    Id = trip2.Id,
+                    DepartureTime = trip2.DepartureTime,
+                    RouteName = $"{trip2.Route.DepartureCity.Name}-{trip2.Route.ArrivalCity.Name}",
+                    VehiclePlate = trip2.Vehicle.PlateNumber,
+                    DriverName = $"{trip2.Driver.FirstName} {trip2.Driver.LastName}",
+                    Status = trip2.TripStatus
+                },
+                new TripListDto
+                {
+                    Id = trip1.Id,
+                    DepartureTime = trip1.DepartureTime,
+                    RouteName = $"{trip1.Route.DepartureCity.Name}-{trip1.Route.ArrivalCity.Name}",
+                    VehiclePlate = trip1.Vehicle.PlateNumber,
+                    DriverName = $"{trip1.Driver.FirstName} {trip1.Driver.LastName}",
+                    Status = trip1.TripStatus
+                },
+                new TripListDto
+                {
+                    Id = trip3.Id,
+                    DepartureTime = trip3.DepartureTime,
+                    RouteName = $"{trip3.Route.DepartureCity.Name}-{trip3.Route.ArrivalCity.Name}",
+                    VehiclePlate = trip3.Vehicle.PlateNumber,
+                    DriverName = $"{trip3.Driver.FirstName} {trip3.Driver.LastName}",
+                    Status = trip3.TripStatus
+                }
+            };
+
+        expectedOrderedTrips = expectedTrips;
+
+        return ctx;
+    }
+
 }

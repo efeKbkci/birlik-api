@@ -17,6 +17,8 @@ namespace Tutorial.Entities;
 public class Reservation 
 {
     public int Id { get; set; }
+    public int CompanyId { get; set; }  
+    public Company Company { get; set; }
     public int TripId { get; set; }
     public Trip Trip { get; set; }
     public int PassengerId { get; set; }

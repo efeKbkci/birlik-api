@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
 
 namespace Tutorial.Controllers;
@@ -51,6 +52,29 @@ public class StopsController(AppDbContext context, IMapper mapper) : ControllerB
             .ToListAsync();
 
         return Ok(list);
+    }
+
+    [HttpGet("company/{companyId}/management-page")]
+    public async Task<IActionResult> GetStopManagementPage(int companyId)
+    {
+        // 1. Sadece CountAsync kullanarak RAM'e veri indirmeden sayıları alıyoruz
+        var totalStops = await _context.Stops
+            .CountAsync(s => s.CompanyId == companyId && !s.IsDeleted);
+
+        // 2. LİSTEYİ ÇEK (Grid'e basılacak duraklar)
+        var stopsList = await _context.Stops
+            .Where(s => s.CompanyId == companyId && !s.IsDeleted)
+            .OrderBy(s => s.StopOrder)
+            .ProjectTo<StopListDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        // 3. PAKETLE VE GÖNDER (Tek bir DTO içinde birleştiriyoruz)
+        var pageData = new StopManagementPageDto
+        {
+            Stops = stopsList
+        };
+
+        return Ok(pageData); // 200 OK ile JSON olarak fırlat
     }
 
     /// <summary>

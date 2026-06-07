@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings
@@ -10,6 +11,8 @@ namespace Tutorial.Mappings
         {
             // --- OKUMA (Entity'den DTO'ya) ---
             CreateMap<Driver, DetailedDriverReadDto>();
+            CreateMap<Driver, DriverListDto>()
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.IsActive && !src.IsDeleted ? "Active" : "Inactive"));
             CreateMap<Driver, BasicDriverReadDto>();
             CreateMap<Driver, DriverDeleteIncludedDto>();
 

@@ -1,5 +1,6 @@
 using AutoMapper;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings;
@@ -12,9 +13,15 @@ public class TripMappingProfile : Profile
         CreateMap<Trip, BasicTripReadDashboardDto>();
         CreateMap<Trip, TripReadPassengerDto>();
         CreateMap<Trip, TripDeleteIncludedDto>();
+        CreateMap<Trip, TripListDto>()
+            .ForMember(dest => dest.RouteName, opt => opt.MapFrom(
+                src => src.Route.DepartureCity.Name + " - " + src.Route.ArrivalCity.Name
+            ))
+            .ForMember(dest => dest.VehiclePlate, opt => opt.MapFrom(src => src.Vehicle.PlateNumber))
+            .ForMember(dest => dest.DriverName, opt => opt.MapFrom(src => src.Driver.FirstName + " " + src.Driver.LastName))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.TripStatus));
 
         CreateMap<TripCreateDto, Trip>();
-
         CreateMap<TripPatchDto, Trip>()
             .ForMember(dest => dest.CompanyId, opt => opt.MapFrom((src, dest) => src.CompanyId ?? dest.CompanyId))
             .ForMember(dest => dest.RouteId, opt => opt.MapFrom((src, dest) => src.RouteId ?? dest.RouteId))

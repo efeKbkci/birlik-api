@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
+using Birlik.Shared.Enums;
 
 namespace Tutorial.Controllers;
 
@@ -36,6 +38,40 @@ public class VehiclesController(AppDbContext context, IMapper mapper) : Controll
         }
 
         return Ok(vehicleDto);
+    }
+
+    [HttpGet("company/{companyId}/management-page")]
+    public async Task<IActionResult> GetVehiclesManagementPage(int companyId)
+    {
+        var today = DateTime.UtcNow.Date; // UTC kullanmak her zaman daha güvenlidir
+
+        // 1. Sadece CountAsync kullanarak RAM'e veri indirmeden sayıları alıyoruz
+        var totalVehicles = await _context.Vehicles
+            .CountAsync(v => v.CompanyId == companyId);
+
+        var maintainedVehiclesCount = await _context.Vehicles
+            .CountAsync(v => v.CompanyId == companyId && !v.IsActive);
+
+        var underwayVehiclesCount = await _context.Trips
+            .CountAsync(d => d.CompanyId == companyId && d.TripStatus == TripStatus.Underway);
+
+        // 2. LİSTEYİ ÇEK (Grid'e basılacak araçlar)
+        var vehiclesList = await _context.Vehicles
+            .Where(v => v.CompanyId == companyId)
+            .OrderByDescending(v => v.Id)
+            .ProjectTo<VehicleListDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        // 3. PAKETLE VE GÖNDER (Tek bir DTO içinde birleştiriyoruz)
+        var pageData = new VehicleManagementPageDto
+        {
+            TotalVehicles = totalVehicles,
+            MaintedVehicleCount = maintainedVehiclesCount,
+            VehiclesOnTheRoadCount = underwayVehiclesCount,
+            Vehicles = vehiclesList
+        };
+
+        return Ok(pageData); // 200 OK ile JSON olarak fırlat
     }
 
     /// <summary>

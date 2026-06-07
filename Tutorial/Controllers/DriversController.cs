@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutorial.Context;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
+using Birlik.Shared.Enums;
 
 namespace Tutorial.Controllers;
 
@@ -52,6 +54,40 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
             .ToListAsync();
 
         return Ok(dtoList);
+    }
+
+    [HttpGet("company/{companyId}/management-page")]
+    public async Task<IActionResult> GetDriversManagementPage(int companyId)
+    {
+        var today = DateTime.UtcNow.Date; // UTC kullanmak her zaman daha güvenlidir
+
+        // 1. Sadece CountAsync kullanarak RAM'e veri indirmeden sayıları alıyoruz
+        var totalDrivers = await _context.Drivers
+            .CountAsync(d => d.CompanyId == companyId && !d.IsDeleted);
+
+        var activeDriversCount = await _context.Drivers
+            .CountAsync(d => d.CompanyId == companyId && !d.IsActive);
+
+        var activeVehiclesCount = await _context.Trips
+            .CountAsync(t => t.CompanyId == companyId && t.TripStatus == TripStatus.Underway);
+
+        // 2. LİSTEYİ ÇEK (Grid'e basılacak sürücüler)
+        var driversList = await _context.Drivers
+            .Where(d => d.CompanyId == companyId && !d.IsDeleted)
+            .OrderByDescending(d => d.CreatedAt)
+            .ProjectTo<DriverListDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        // 3. PAKETLE VE GÖNDER (Tek bir DTO içinde birleştiriyoruz)
+        var pageData = new DriverManagementPageDto
+        {
+            TotalDrivers = totalDrivers,
+            InActiveDriverCount = activeDriversCount,
+            VehiclesOnTheRoadCount = activeVehiclesCount,
+            Drivers = driversList
+        };
+
+        return Ok(pageData); // 200 OK ile JSON olarak fırlat
     }
 
     /// <summary>

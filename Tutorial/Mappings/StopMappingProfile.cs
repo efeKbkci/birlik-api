@@ -1,5 +1,6 @@
 using AutoMapper;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings;
@@ -11,6 +12,10 @@ public class StopMappingProfile : Profile
         CreateMap<Stop, DetailedStopReadDto>();
         CreateMap<Stop, BasicStopReadDto>();
         CreateMap<Stop, StopDeleteIncludedDto>();
+        // List view mapping for management page
+        CreateMap<Stop, StopListDto>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.StopName))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.IsActive && !src.IsDeleted ? "Active" : "Inactive"));
 
         CreateMap<StopCreateDto, Stop>()
              .ForMember(dest => dest.TimeOffsetMins, opt => opt.MapFrom((src, dest) => src.TimeOffsetMins ?? -1));

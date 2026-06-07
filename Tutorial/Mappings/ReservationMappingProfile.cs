@@ -1,5 +1,6 @@
 using AutoMapper;
 using Birlik.Shared.DTOs;
+using Birlik.Shared.DTOs.Page;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings;
@@ -32,6 +33,13 @@ public class ReservationMappingProfile : Profile
             )
             .ForMember(dest => dest.PassengerName, opt => opt.MapFrom(src => src.Passenger.FirstName + " " + src.Passenger.LastName))
             .ForMember(dest => dest.PassengerNumber, opt => opt.MapFrom(src => src.Passenger.PhoneNumber));
+
+        CreateMap<Reservation, ReservationListDto>()
+                .ForMember(dest => dest.PassengerName, opt => opt.MapFrom(src => src.Passenger.FirstName + " " + src.Passenger.LastName))
+                .ForMember(dest => dest.RouteName, opt => opt.MapFrom(src =>
+                    src.Trip.Route.DepartureCity.Name + " - " + src.Trip.Route.ArrivalCity.Name
+                    )
+                );
 
         CreateMap<ReservationCreateDto, Reservation>();
 
