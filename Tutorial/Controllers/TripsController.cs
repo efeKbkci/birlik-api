@@ -87,7 +87,7 @@ public class TripsController(AppDbContext context, IMapper mapper) : ControllerB
             .CountAsync(v => v.CompanyId == companyId && v.IsActive && !v.IsDeleted);
 
         var activeDriversCount = await _context.Drivers
-            .CountAsync(d => d.CompanyId == companyId && d.IsActive && !d.IsDeleted);
+            .CountAsync(d => d.CompanyId == companyId && d.Status == DriverStatus.Available && !d.IsDeleted);
 
         // 2. LÝSTEYÝ ÇEK (Grid'e basýlacak seferler)
         var tripsList = await _context.Trips

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Birlik.Shared.DTOs;
 using Birlik.Shared.DTOs.Page;
+using Birlik.Shared.Enums;
 using Tutorial.Entities;
 
 namespace Tutorial.Mappings
@@ -12,7 +13,7 @@ namespace Tutorial.Mappings
             // --- OKUMA (Entity'den DTO'ya) ---
             CreateMap<Driver, DetailedDriverReadDto>();
             CreateMap<Driver, DriverListDto>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.IsActive && !src.IsDeleted ? "Active" : "Inactive"));
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status == DriverStatus.Available && !src.IsDeleted ? "Active" : "Inactive"));
             CreateMap<Driver, BasicDriverReadDto>();
             CreateMap<Driver, DriverDeleteIncludedDto>();
 
@@ -20,11 +21,11 @@ namespace Tutorial.Mappings
             CreateMap<DriverCreateDto, Driver>();
             CreateMap<DriverPatchDto,  Driver>()
                 // integer, boolean gibi değer tipleri null olamaz.
-                // int? CompanyId = null olarak kullanıcıdan geldiyse AutoMapper onu 0 değerine dönüştürür. 
-                // bool? IsActive = null olarak geldiyse AutoMapper onu false değerine dönüştürür. 
-                // Bu otomatik dönüştürme işlemini istemediğimiz için null olmayan değeri kullan diyoruz. 
+                // int? CompanyId = null olarak kullanıcıdan geldiyse AutoMapper onu 0 değerine dönüştürür.
+                // DriverStatus? Status = null olarak geldiyse ForAllMembers kuralı sayesinde dest değeri korunur.
+                // Bu otomatik dönüştürme işlemini istemediğimiz için null olmayan değeri kullan diyoruz.
                 .ForMember(dest => dest.CompanyId, opt => opt.MapFrom((src, dest) => src.CompanyId ?? dest.CompanyId))
-                .ForMember(dest => dest.IsActive, opt => opt.MapFrom((src, dest) => src.IsActive ?? dest.IsActive))
+                // Status mapping will be handled by AutoMapper conventions if the DTO exposes a matching property.
                 // Tüm property'ler için şu kuralı uygula: Sadece kaynak değer (srcMember) null DEĞİLSE kopyala.
                 // Aksi durumda entity değerini değiştirme.
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null)); 

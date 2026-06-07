@@ -32,7 +32,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
         var companyId = (await cRes.Content.ReadFromJsonAsync<DetailedCompanyReadDto>())!.Id;
 
         var dRes = await _client.PostAsJsonAsync("/api/drivers", TestDataFactory.CreateNewDriverObject(companyId));
-        var driverId = (await dRes.Content.ReadFromJsonAsync<DetailedDriverReadDto>())!.Id;
+        var driverId = (await dRes.Content.ReadFromJsonAsync<DetailedDriverReadDto>(_jsonOptions))!.Id;
 
         var vRes = await _client.PostAsJsonAsync("/api/vehicles", TestDataFactory.CreateNewVehicleObject(companyId, driverId));
         var vehicleId = (await vRes.Content.ReadFromJsonAsync<DetailedVehicleReadDto>())!.Id;
@@ -203,7 +203,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
             CompanyId = seededCompanyId,
             FirstName = "Active",
             LastName = "Driver",
-            IsActive = true,
+            Status = DriverStatus.Available,
             IsDeleted = false
         };
         var inactiveDriver = new Driver
@@ -212,7 +212,7 @@ public class TripsControllerTests(InMemoryWebApplicationFactory factory) : Integ
             CompanyId = seededCompanyId,
             FirstName = "Inactive",
             LastName = "Driver",
-            IsActive = false,
+            Status = DriverStatus.Unavailable,
             IsDeleted = false
         };
         ctx.Drivers.AddRange(activeDriver, inactiveDriver);

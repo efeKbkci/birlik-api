@@ -7,7 +7,7 @@ using Xunit;
 
 namespace IntegrationTests;
 
-public class DriversControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
+public class DriversControllerTests(InMemoryWebApplicationFactory factory) : IntegrationTestBase(factory), IClassFixture<InMemoryWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -25,23 +25,23 @@ public class DriversControllerTests(InMemoryWebApplicationFactory factory) : ICl
         var driverDto = TestDataFactory.CreateNewDriverObject(companyId);
 
         // --- 2. CREATE (POST) ---
-        var postResponse = await _client.PostAsJsonAsync("/api/drivers", driverDto);
+        var postResponse = await _client.PostAsJsonAsync("/api/drivers", driverDto, _jsonOptions);
         Assert.Equal(HttpStatusCode.Created, postResponse.StatusCode);
 
-        var createdDriver = await postResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>();
+        var createdDriver = await postResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>(_jsonOptions);
         Assert.NotNull(createdDriver);
         var driverId = createdDriver.Id;
 
         // --- 3. READ (GET) ---
         var getResponse = await _client.GetAsync($"/api/drivers/{driverId}");
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
-        var fetchedDriver = await getResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>();
+        var fetchedDriver = await getResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>(_jsonOptions);
         Assert.Equal(driverDto.FirstName, fetchedDriver?.FirstName);
 
         // --- 4. UPDATE (PATCH) ---
         var newPhone = "555-999-8877";
         var patchDto = new DriverPatchDto { PhoneNumber = newPhone };
-        var patchResponse = await _client.PatchAsJsonAsync($"/api/drivers/{driverId}", patchDto);
+        var patchResponse = await _client.PatchAsJsonAsync($"/api/drivers/{driverId}", patchDto, _jsonOptions);
         Assert.Equal(HttpStatusCode.NoContent, patchResponse.StatusCode);
 
         // --- 5. DELETE (Yumuşak Silme) ---
@@ -55,7 +55,7 @@ public class DriversControllerTests(InMemoryWebApplicationFactory factory) : ICl
         // Silinenler listesinde (company/{id}/deleted) görünmeli
         var deletedListResponse = await _client.GetAsync($"/api/drivers/company/{companyId}/deleted");
         Assert.Equal(HttpStatusCode.OK, deletedListResponse.StatusCode);
-        var deletedDrivers = await deletedListResponse.Content.ReadFromJsonAsync<List<DriverDeleteIncludedDto>>();
+        var deletedDrivers = await deletedListResponse.Content.ReadFromJsonAsync<List<DriverDeleteIncludedDto>>(_jsonOptions);
         Assert.Contains(deletedDrivers!, d => d.Id == driverId && d.IsDeleted);
 
         // --- 6. RESTORE (PUT) ---

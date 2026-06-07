@@ -18,11 +18,13 @@ public static class TestDataFactory
         var randomName = faker.Company.CompanyName();
         var randomPhoneNumber = faker.Phone.PhoneNumber();
         var randomLocation = faker.Address.City();
+        var randomMail = faker.Internet.Email();
 
         var createDto = new CompanyCreateDto
         {
             CompanyName = randomName,
             ContactPhone = randomPhoneNumber,
+            Email = randomMail,
             Location = randomLocation,
             IsActive = true
         };
@@ -63,8 +65,7 @@ public static class TestDataFactory
             FirstName = randomFirstName,
             LastName = randomLastName,
             PhoneNumber = randomPhoneNumber,
-            PasswordHash = randomPassword,
-            IsActive = true
+            Status = DriverStatus.Available,
         };
 
         return createDto;

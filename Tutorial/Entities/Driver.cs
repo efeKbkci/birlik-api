@@ -1,4 +1,6 @@
-﻿namespace Tutorial.Entities;
+﻿using Birlik.Shared.Enums;
+
+namespace Tutorial.Entities;
 
 public class Driver
 {
@@ -8,8 +10,7 @@ public class Driver
     public string FirstName { get; set; }
     public string LastName { get; set; }
     public string PhoneNumber { get; set; }
-    public string PasswordHash { get; set; }
-    public bool IsActive { get; set; }
+    public DriverStatus Status { get; set; }
     public bool IsDeleted { get; set; } = false;
     public DateTime CreatedAt { get; set; } 
 }

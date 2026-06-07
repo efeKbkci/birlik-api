@@ -7,7 +7,7 @@ using Xunit;
 
 namespace IntegrationTests;
 
-public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IClassFixture<InMemoryWebApplicationFactory>
+public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IntegrationTestBase(factory), IClassFixture<InMemoryWebApplicationFactory>
 {
     private readonly HttpClient _client = factory.CreateClient();
 
@@ -23,7 +23,7 @@ public class VehiclesControllerTests(InMemoryWebApplicationFactory factory) : IC
 
         var driverCreate = TestDataFactory.CreateNewDriverObject(companyId);
         var driverResponse = await _client.PostAsJsonAsync("/api/drivers", driverCreate);
-        var createdDriver = await driverResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>();
+        var createdDriver = await driverResponse.Content.ReadFromJsonAsync<DetailedDriverReadDto>(_jsonOptions);
         var driverId = createdDriver!.Id;
 
         // --- 1. ARRANGE: Araç Hazırlığı ---

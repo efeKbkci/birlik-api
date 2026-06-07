@@ -66,7 +66,7 @@ public class DriversController(AppDbContext context, IMapper mapper) : Controlle
             .CountAsync(d => d.CompanyId == companyId && !d.IsDeleted);
 
         var activeDriversCount = await _context.Drivers
-            .CountAsync(d => d.CompanyId == companyId && !d.IsActive);
+            .CountAsync(d => d.CompanyId == companyId && d.Status != DriverStatus.Available);
 
         var activeVehiclesCount = await _context.Trips
             .CountAsync(t => t.CompanyId == companyId && t.TripStatus == TripStatus.Underway);

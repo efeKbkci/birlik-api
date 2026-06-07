@@ -37,7 +37,11 @@ namespace Tutorial.Context
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.ReservationStatus)
                 .HasConversion<string>();
-            
+
+            modelBuilder.Entity<Driver>()
+                .Property(d => d.Status)
+                .HasConversion<string>();
+
             /*
             // PassengerStatus için string dönüşümü
             modelBuilder.Entity<Reservation>()

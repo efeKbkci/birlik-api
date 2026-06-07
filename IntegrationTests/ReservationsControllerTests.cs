@@ -16,7 +16,7 @@ public class ReservationsControllerTests(InMemoryWebApplicationFactory factory) 
         var companyId = (await cRes.Content.ReadFromJsonAsync<DetailedCompanyReadDto>())!.Id;
 
         var dRes = await _client.PostAsJsonAsync("/api/drivers", TestDataFactory.CreateNewDriverObject(companyId));
-        var driverId = (await dRes.Content.ReadFromJsonAsync<DetailedDriverReadDto>())!.Id;
+        var driverId = (await dRes.Content.ReadFromJsonAsync<DetailedDriverReadDto>(_jsonOptions))!.Id;
 
         var vRes = await _client.PostAsJsonAsync("/api/vehicles", TestDataFactory.CreateNewVehicleObject(companyId, driverId));
         var vehicleId = (await vRes.Content.ReadFromJsonAsync<DetailedVehicleReadDto>())!.Id;
