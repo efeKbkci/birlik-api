@@ -17,8 +17,8 @@ services:
 
   vip_backend:
     build: 
-      context: .
-      dockerfile: Dockerfile
+      context: .. # Değişiklik burada: Artık 'repos' klasörüne bakıyoruz.
+      dockerfile: Birlik.API/Dockerfile # Dockerfile'ın yerini açıkça belirtiyoruz.
     container_name: vip_api
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

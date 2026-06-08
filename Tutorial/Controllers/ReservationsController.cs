@@ -63,12 +63,15 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
         var requiresApprovalCount = await _context.Reservations
             .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus == ReservationStatus.Pending);
 
-        var approvedTodayCount = await _context.Reservations
-            .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus == ReservationStatus.Confirmed && r.CreatedAt.Date == today);
+        var approvedCount = await _context.Reservations
+            .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus == ReservationStatus.Confirmed);
+
+        var canceledCount = await _context.Reservations
+            .CountAsync(r => r.CompanyId == companyId && r.ReservationStatus == ReservationStatus.Canceled);   
 
         // 2. LİSTEYİ ÇEK (Grid'e basılacak seferler)
         var ReservationList = await _context.Reservations
-            .Where(r => r.CompanyId == companyId && r.ReservationStatus != ReservationStatus.Canceled)
+            .Where(r => r.CompanyId == companyId)
             .ProjectTo<ReservationListDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
@@ -76,7 +79,8 @@ public class ReservationsController(AppDbContext context, IMapper mapper) : Cont
         var pageData = new ReservationManagementPageDto
         {
             RequiresApprovalCount = requiresApprovalCount,
-            ApprovedTodayCount = approvedTodayCount,
+            ApprovedCount = approvedCount,
+            CanceledCount = canceledCount,
             Reservations = ReservationList
         };
 
