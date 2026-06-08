@@ -12,8 +12,7 @@ namespace Tutorial.Mappings
         {
             // --- OKUMA (Entity'den DTO'ya) ---
             CreateMap<Driver, DetailedDriverReadDto>();
-            CreateMap<Driver, DriverListDto>()
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status == DriverStatus.Available && !src.IsDeleted ? "Active" : "Inactive"));
+            CreateMap<Driver, DriverListDto>();
             CreateMap<Driver, BasicDriverReadDto>();
             CreateMap<Driver, DriverDeleteIncludedDto>();
 

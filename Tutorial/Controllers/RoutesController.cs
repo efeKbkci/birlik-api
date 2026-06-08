@@ -7,6 +7,7 @@ using Tutorial.Context;
 using Birlik.Shared.DTOs;
 using Tutorial.Entities;
 using Route = Tutorial.Entities.Route;
+using Tutorial.Core.Specifications;
 
 namespace Tutorial.Controllers;
 
@@ -35,6 +36,27 @@ public class RoutesController(AppDbContext context, IMapper mapper) : Controller
             return NotFound();
 
         return Ok(routeDto);
+    }
+
+    /// <summary>
+    /// Kalkış ve varış şehirleri ile eşleşen güzergah bilgisini getirir.
+    /// </summary>
+    /// <response code="200">Güzergah bulundu. Detaylar döner.</response>
+    /// <response code="404">Güzergah bulunamadı.</response>
+    [ProducesResponseType(typeof(RouteReadDto), StatusCodes.Status200OK)]
+    [HttpGet("cities")]
+    public async Task<IActionResult> GetRouteByCity([FromQuery] RouteFilter filter)
+    {
+        var spec = new FilteredRoutesSpecification(filter);
+        var query = SpecificationEvaluator<Route>.GetQuery(_context.Routes.AsQueryable(), spec);
+
+        var result = await query
+            .ProjectTo<RouteReadDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync();
+
+        if (result == null) return NotFound();
+
+        return Ok(result);
     }
 
     /// <summary>
