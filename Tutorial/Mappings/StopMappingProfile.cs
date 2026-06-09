@@ -14,6 +14,7 @@ public class StopMappingProfile : Profile
         CreateMap<Stop, StopDeleteIncludedDto>();
         // List view mapping for management page
         CreateMap<Stop, StopListDto>()
+            .ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Route.DepartureCity.Name + " - " + src.Route.ArrivalCity.Name))
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.StopName))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.IsActive && !src.IsDeleted ? "Active" : "Inactive"));
 

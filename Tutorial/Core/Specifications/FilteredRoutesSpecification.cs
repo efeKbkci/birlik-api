@@ -1,4 +1,5 @@
 ﻿using Birlik.Shared.DTOs;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,14 @@ namespace Tutorial.Core.Specifications;
 
 public class FilteredRoutesSpecification : BaseSpecification<Route>
 {
-    public FilteredRoutesSpecification(RouteFilter filter) : base(r => 
-        ((filter.ArrivalCityName == null) || r.ArrivalCity.Name.ToLower().Contains(filter.ArrivalCityName.ToLower())) &&
-        ((filter.DepartureCityName == null) || r.DepartureCity.Name.ToLower().Contains(filter.DepartureCityName.ToLower()))
+    // ILike : büyük - küçük harf duyarsız yapmak için kullandığımız fonksiyon.
+    public FilteredRoutesSpecification(RouteFilter filter) : base(r =>
+        (string.IsNullOrEmpty(filter.ArrivalCityName) ||
+         EF.Functions.ILike(r.ArrivalCity.Name, $"%{filter.ArrivalCityName}%"))
+        &&
+        (string.IsNullOrEmpty(filter.DepartureCityName) ||
+         EF.Functions.ILike(r.DepartureCity.Name, $"%{filter.DepartureCityName}%"))
     )
-    { }
+    {
+    }
 }
